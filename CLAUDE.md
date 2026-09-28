@@ -1,7 +1,7 @@
 # Instruções para o Claude Code
 
-Nunca execute o trabalho por conta própria.
-Sempre delegue a tarefa a um subagente.
+Delegue tarefas médias e grandes a subagentes.
+Tarefas simples e rápidas (uma edição pontual, uma pergunta direta) execute você mesmo.
 Não use sempre o Fable.
 Use o Opus 5.5 para tarefas mais simples.
 
@@ -12,6 +12,6 @@ Use o Opus 5.5 para tarefas mais simples.
 - Especifique o modelo em cada chamada de agente.
 
 ## Delegação
-- Um subagente por tarefa. Planeje antes de executar.
+- Agrupe tarefas relacionadas em um mesmo subagente; separe apenas o que é independente. Planeje antes de executar.
 - Execute subagentes independentes em paralelo.
-- Leia o relatório, nunca os arquivos.
+- Leia o relatório e confira nos arquivos os pontos críticos antes de concluir.
