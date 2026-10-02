@@ -1,0 +1,1527 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pré-aprovação de OC</title>
+<style>
+:root{
+  color-scheme: light;
+  --bg:#f4f4f1; --surface:#fcfcfb; --surface-2:#f0efeb; --ink:#0b0b0b; --ink-2:#52514e; --muted:#6f6d67;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,.12);
+  --accent:#2a78d6; --accent-ink:#1d5fae; --serie-2:#eb6834; --sel:#e8f0fb;
+  --ok:#0ca30c; --alerta:#fab219; --critico:#d03b3b;
+  --ok-ink:#006300; --alerta-ink:#6e4700; --critico-ink:#a52626;
+  --ok-bg:#e5f4e2; --alerta-bg:#fff1cf; --critico-bg:#fbe4e2;
+  --btn-ok:#0b7d0b; --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#0d0d0d; --surface:#1a1a19; --surface-2:#242422; --ink:#ffffff; --ink-2:#c3c2b7; --muted:#9a988f;
+    --grid:#2c2c2a; --axis:#45453f; --border:rgba(255,255,255,.12);
+    --accent:#3987e5; --accent-ink:#8ab8f0; --serie-2:#d95926; --sel:rgba(57,135,229,.18);
+    --ok-ink:#5fd15f; --alerta-ink:#fac04a; --critico-ink:#f08585;
+    --ok-bg:rgba(12,163,12,.16); --alerta-bg:rgba(250,178,25,.15); --critico-bg:rgba(208,59,59,.2);
+    --btn-ok:#0b7d0b;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0d0d0d; --surface:#1a1a19; --surface-2:#242422; --ink:#ffffff; --ink-2:#c3c2b7; --muted:#9a988f;
+  --grid:#2c2c2a; --axis:#45453f; --border:rgba(255,255,255,.12);
+  --accent:#3987e5; --accent-ink:#8ab8f0; --serie-2:#d95926; --sel:rgba(57,135,229,.18);
+  --ok-ink:#5fd15f; --alerta-ink:#fac04a; --critico-ink:#f08585;
+  --ok-bg:rgba(12,163,12,.16); --alerta-bg:rgba(250,178,25,.15); --critico-bg:rgba(208,59,59,.2);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;overflow-x:hidden}
+.wrap{max-width:1360px;margin:0 auto;padding:0 16px}
+h1{font-size:19px;margin:0;letter-spacing:-.01em}
+h2{font-size:15px;margin:0}
+h3{font-size:12px;margin:0 0 8px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.05em}
+p{margin:0}
+.faixa{background:var(--alerta-bg);color:var(--alerta-ink);font-weight:650;padding:8px 16px;text-align:center;font-size:13px;border-bottom:1px solid var(--border)}
+.topo{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 0;margin-bottom:14px}
+.topo-in{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+.sub{color:var(--ink-2);font-size:12px;margin-top:2px}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.tag.ex{background:var(--alerta-bg);color:var(--alerta-ink);border-color:transparent;font-weight:650}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;min-width:0}
+.card-h{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.muted{color:var(--muted)} .small{font-size:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;min-width:0}
+.kpi .r{font-size:11.5px;color:var(--ink-2)}
+.kpi .v{font-size:19px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px;overflow-wrap:anywhere}
+.kpi .d{font-size:11.5px;color:var(--muted);margin-top:2px}
+.recorte{font-size:12px;color:var(--ink-2);margin:-4px 0 14px;padding:8px 12px;border-left:3px solid var(--accent);background:var(--surface)}
+.tabela-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:8px;max-width:100%}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--grid);white-space:nowrap;vertical-align:middle}
+th{font-size:11.5px;font-weight:600;color:var(--ink-2);background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:0}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+td.desc{white-space:normal;min-width:180px}
+tr.clic{cursor:pointer} tr.clic:hover{background:var(--surface-2)} tr.clic:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+tr.sel,tr.sel:hover{background:var(--sel);box-shadow:inset 3px 0 0 var(--accent)}
+.sinal{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:650;padding:2px 9px 2px 3px;border-radius:999px;white-space:nowrap}
+.sinal .ic{width:16px;height:16px;border-radius:50%;display:inline-grid;place-items:center;font-size:10px;line-height:1;color:#fff;font-weight:800}
+.s-ok{background:var(--ok-bg);color:var(--ok-ink)} .s-ok .ic{background:var(--ok)}
+.s-alerta{background:var(--alerta-bg);color:var(--alerta-ink)} .s-alerta .ic{background:var(--alerta);color:#3a2a00}
+.s-critico{background:var(--critico-bg);color:var(--critico-ink)} .s-critico .ic{background:var(--critico)}
+.s-carregando,.s-nd{background:var(--surface-2);color:var(--muted)} .s-carregando .ic,.s-nd .ic{background:var(--axis)}
+.f-alerta::before,.f-critico::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.f-alerta::before{background:var(--alerta)} .f-critico::before{background:var(--critico)}
+.resumo{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:14px 20px;align-items:start}
+.rec{border-radius:10px;padding:12px 14px}
+.rec .r{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;opacity:.85}
+.rec .v{font-size:22px;font-weight:750;margin-top:2px}
+.rec-aprovar{background:var(--ok-bg);color:var(--ok-ink)} .rec-ressalva{background:var(--alerta-bg);color:var(--alerta-ink)} .rec-revisar{background:var(--critico-bg);color:var(--critico-ink)} .rec-calc{background:var(--surface-2);color:var(--muted)}
+.motivos-rec{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.motivos-rec li{display:flex;gap:8px;align-items:flex-start;font-size:13.5px}
+.motivos-rec li .sinal{flex:none}
+.cab{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 16px}
+.cab div{min-width:0} .cab .r{font-size:11.5px;color:var(--ink-2)} .cab .v{font-weight:600;overflow-wrap:anywhere}
+.det-topo{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:10px}
+.lista-sinais{margin:0 0 12px;padding:0;list-style:none;display:grid;gap:4px}
+.lista-sinais li{display:flex;gap:8px;align-items:flex-start;font-size:13px}
+.det-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:12px}
+.bloco{border:1px solid var(--border);border-radius:8px;padding:12px;min-width:0;background:var(--surface)}
+.bloco h3{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.mm{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:6px;margin:8px 0}
+.mm div{background:var(--surface-2);border-radius:6px;padding:6px 8px;min-width:0}
+.mm span{display:block;font-size:11px;color:var(--ink-2)}
+.mm b{display:block;font-size:14px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.graf{width:100%;height:auto;display:block;margin:4px 0}
+.graf text{fill:var(--muted);font-size:10px;font-family:inherit}
+.graf .ref-t{fill:var(--ink-2);font-weight:600;paint-order:stroke;stroke:var(--surface);stroke-width:3px}
+.graf-titulo{font-size:12px;color:var(--ink-2);margin-top:6px}
+.legenda{display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;color:var(--ink-2);margin-top:2px}
+.legenda i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.legenda i.linha{height:2px;border-radius:0;vertical-align:3px}
+.legenda i.trac{height:0;border-top:2px dashed var(--ink-2);background:none!important;vertical-align:3px}
+.eq{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;font-size:13px;margin:8px 0}
+.eq .num{font-weight:600}
+.eq .tot{border-top:1px solid var(--grid);padding-top:4px;font-weight:700}
+.vazio{padding:16px;text-align:center;color:var(--muted);font-size:13px}
+.erro{color:var(--critico-ink);background:var(--critico-bg);border-radius:6px;padding:8px 10px;font-size:13px;overflow-wrap:anywhere}
+.alerta-box{color:var(--alerta-ink);background:var(--alerta-bg);border-radius:6px;padding:8px 10px;font-size:13px;margin-bottom:10px;font-weight:600}
+.carreg{color:var(--muted);font-size:13px;padding:8px 0}
+.barra-mot{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;margin-top:3px}
+.barra-mot span{display:block;height:100%;background:var(--accent);border-radius:3px}
+.mot{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:8px}
+.mot li{font-size:13px}
+.mot .linha-m{display:flex;justify-content:space-between;gap:8px}
+input,textarea,select,button{font:inherit}
+input[type=text],input[type=number],input[type=password],input[type=url],textarea,select{color:var(--ink);background:var(--surface);border:1px solid var(--axis);border-radius:6px;padding:6px 8px;max-width:100%}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+textarea{width:100%;resize:vertical}
+.btn{font-weight:650;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--ink);cursor:pointer}
+.btn:hover{filter:brightness(.97)}
+.btn.b-ok{background:var(--btn-ok);color:#fff;border-color:transparent}
+.btn.b-crit{background:var(--critico);color:#fff;border-color:transparent}
+.btn.b-alerta{background:var(--alerta);color:#2e2100;border-color:transparent}
+.btn.b-pri{background:var(--accent);color:#fff;border-color:transparent}
+.botoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.form-abrir{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.form-abrir input{width:120px}
+.inline{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:13px}
+.inline input{width:72px}
+details.cfg>summary{cursor:pointer;font-weight:650;font-size:14px;list-style:none;display:flex;justify-content:space-between;gap:8px}
+details.cfg>summary::after{content:"▸";color:var(--muted)}
+details.cfg[open]>summary::after{content:"▾"}
+.cfg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px;margin-top:12px}
+fieldset{border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:0;min-width:0}
+legend{font-size:12px;font-weight:650;color:var(--ink-2);padding:0 4px}
+.campo{display:grid;gap:3px;margin-bottom:8px;font-size:12.5px}
+.campo input,.campo select{width:100%}
+.lim{display:grid;grid-template-columns:minmax(0,1fr) 76px auto;gap:6px;align-items:center;font-size:12.5px;margin-bottom:5px}
+.lim input{width:76px}
+.radios{display:flex;gap:14px;margin-bottom:8px;font-size:13px}
+.hist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.hist li{border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px}
+.hist .q{color:var(--muted);font-size:12px}
+.rodape{color:var(--muted);font-size:12px;padding:6px 16px 32px}
+.rodape .restrito{display:inline-block;border:1px solid var(--border);border-radius:6px;padding:4px 8px;margin-bottom:6px}
+#tip{position:fixed;z-index:50;pointer-events:none;background:var(--ink);color:var(--surface);font-size:12px;padding:6px 8px;border-radius:6px;white-space:pre-line;max-width:260px;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+#toast{position:fixed;right:16px;bottom:16px;left:16px;margin-left:auto;max-width:420px;z-index:60;background:var(--ink);color:var(--surface);padding:10px 12px;border-radius:8px;font-size:13px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:760px){
+  .resumo{grid-template-columns:minmax(0,1fr)}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi .v{font-size:16px}
+  .card{padding:12px}
+  h1{font-size:17px}
+}
+</style>
+</head>
+<body>
+<div id="faixaExemplo" class="faixa" hidden></div>
+<header class="topo">
+  <div class="wrap topo-in">
+    <div>
+      <h1>Pré-aprovação de Ordem de Compra</h1>
+      <p class="sub">San Jose · Paraguai · valores em guaranis (G$)</p>
+    </div>
+    <div class="badges" id="badges"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <details class="card cfg" id="cfg">
+    <summary>Fonte de dados e configuração</summary>
+    <div class="cfg-grid">
+      <fieldset>
+        <legend>Históricos (Chipa) e Compras</legend>
+        <div class="radios" role="radiogroup" aria-label="Modo de dados">
+          <label><input type="radio" name="modo" value="exemplo" checked> Exemplo</label>
+          <label><input type="radio" name="modo" value="chipa"> API Chipa</label>
+        </div>
+        <label class="campo">URL base da API
+          <input type="text" id="baseUrl" value="/api/v1" autocomplete="off" spellcheck="false">
+        </label>
+        <label class="campo">Token (fica só na memória desta aba; não é salvo)
+          <input type="password" id="token" autocomplete="off" spellcheck="false" placeholder="Bearer token do Chipa">
+        </label>
+        <button class="btn b-pri" id="aplicarFonte" type="button">Aplicar e recarregar</button>
+        <p class="small muted" style="margin-top:8px">No modo Chipa a página precisa estar servida na origem chipa.sanjosesa.com.py (rede e CORS). Compras usa a mesma ponte, mas os endpoints ainda estão a confirmar com o relatório SECE109.</p>
+      </fieldset>
+      <fieldset>
+        <legend>Compras — relatório SECE109 (importar)</legend>
+        <label class="campo">Arquivos CSV ou JSON exportados do SECE109
+          <input type="file" id="arqSece" accept=".csv,.json,.txt,text/csv,application/json" multiple>
+        </label>
+        <p class="small" id="statusSece">Nenhum SECE109 importado. Compras segue o modo selecionado.</p>
+        <div class="botoes"><button class="btn" id="descartarSece" type="button">Descartar SECE109 importado</button></div>
+        <p class="small muted" style="margin-top:8px">Colunas aceitas: ver README (mapeamento em <code>MAPA_SECE109</code>).</p>
+      </fieldset>
+      <fieldset>
+        <legend>Importar OC (JSON)</legend>
+        <textarea id="ocJson" rows="5" spellcheck="false" placeholder='{"numero":"31716","fornecedor":{"codigo":"0127","nome":"..."},"itens":[{"codpro":"05040.0075","descricao":"...","quantidade":100,"preco_unitario":50000}]}'></textarea>
+        <div class="botoes">
+          <button class="btn b-pri" id="usarJson" type="button">Analisar esta OC</button>
+          <label class="btn" style="display:inline-block">Arquivo… <input type="file" id="arqOc" accept=".json,application/json" class="sr"></label>
+          <button class="btn" id="voltarExemplo" type="button">Voltar à OC 31716</button>
+        </div>
+        <p class="small" id="statusJson" role="status"></p>
+      </fieldset>
+      <fieldset>
+        <legend>Limites dos sinais</legend>
+        <div id="limites"></div>
+        <div class="botoes"><button class="btn" id="limPadrao" type="button">Restaurar padrões</button></div>
+      </fieldset>
+    </div>
+  </details>
+
+  <section class="card" id="filaCard" aria-labelledby="tFila">
+    <div class="card-h">
+      <h2 id="tFila">OCs em aberto para aprovação</h2>
+      <form class="form-abrir" id="formAbrir">
+        <label for="abrirNum" class="small">Abrir OC nº</label>
+        <input type="text" id="abrirNum" inputmode="numeric" placeholder="ex.: 31716" autocomplete="off">
+        <button class="btn b-pri" type="submit">Abrir</button>
+      </form>
+    </div>
+    <p class="erro" id="erroAbrir" role="alert" hidden></p>
+    <div id="fila"></div>
+  </section>
+
+  <section id="analise" aria-label="Análise da OC">
+    <div class="card" id="resumo"></div>
+    <div class="card" id="cabecalho"></div>
+    <div class="kpis" id="kpis"></div>
+    <p class="recorte" id="recorte"></p>
+
+    <section class="card" aria-labelledby="tItens">
+      <div class="card-h">
+        <h2 id="tItens">Itens da OC</h2>
+        <label class="inline">Prazo de entrega <input type="number" id="prazoTopo" min="1" max="720" step="1"> dias <span class="muted" id="chegadaTxt"></span></label>
+      </div>
+      <div class="tabela-wrap" id="itens"></div>
+      <p class="small muted" style="margin-top:6px">Clique num item para ver o detalhe. Cobertura do pedido = quantidade pedida ÷ média mensal de unidades vendidas.</p>
+    </section>
+
+    <section class="card" id="detalhe" aria-live="polite"></section>
+    <section class="card" id="pendentes"></section>
+    <section class="card" id="fornecedor"></section>
+
+    <section class="card" id="decisao" aria-labelledby="tDec">
+      <div class="card-h"><h2 id="tDec">Decisão</h2><span class="small muted" id="decStatus"></span></div>
+      <label for="comentario" class="small">Comentário <span class="muted">(obrigatório para Reprovar e para Devolver para ajuste)</span></label>
+      <textarea id="comentario" rows="3"></textarea>
+      <p class="erro" id="erroDecisao" role="alert" hidden style="margin-top:6px"></p>
+      <div class="botoes">
+        <button class="btn b-ok" type="button" data-acao="aprovar">Aprovar</button>
+        <button class="btn b-crit" type="button" data-acao="reprovar">Reprovar</button>
+        <button class="btn b-alerta" type="button" data-acao="devolver">Devolver para ajuste</button>
+        <button class="btn" type="button" id="exportar">Exportar parecer (JSON)</button>
+      </div>
+      <h3 style="margin-top:16px">Histórico de decisões desta OC</h3>
+      <div id="historico"></div>
+    </section>
+  </section>
+</main>
+<footer class="rodape wrap">
+  <div class="restrito">Tela com custo de compra — acesso restrito a Compras e Diretoria.</div>
+  <div>Custo de compra vem da área de Compras (SECE109). Dados do Chipa: custo de venda e margem são descartados ao receber e nunca exibidos.</div>
+</footer>
+<div id="tip" role="tooltip" hidden></div>
+<div id="toast" role="status" hidden></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   CONFIGURAÇÃO
+   ===================================================================== */
+const ENDPOINTS_COMERCIAL = {
+  fattotdim: 'q/comercial/fattotdim',
+  motivos:   'q/comercial/devncfacc',
+};
+
+/* Endpoints de COMPRAS — A CONFIRMAR COM O RELATÓRIO SECE109 (ERP Senior).
+   Mesma ponte do Chipa (mesmo token e URL base). Enquanto um caminho contiver
+   "TODO", a tela NÃO chama a API e avisa no bloco correspondente.
+   Parâmetros enviados (também a confirmar) estão ao lado de cada um. */
+const ENDPOINTS_COMPRAS = {
+  ocsAbertas:    'q/compras/TODO-sece109-ocs-abertas',    // sem parâmetros
+  ocItens:       'q/compras/TODO-sece109-oc-itens',       // numero
+  ocsPendentes:  'q/compras/TODO-sece109-ocs-pendentes',  // codpro (lista separada por vírgula) ou proveedor
+  estoqueMensal: 'q/compras/TODO-sece109-estoque-mensal', // codpro, data_ini, data_fim
+  estoqueAtual:  'q/compras/TODO-sece109-estoque-atual',  // codpro (opcional; sem ele usa o último mês)
+  custoMensal:   'q/compras/TODO-sece109-custo-mensal',   // codpro, data_ini, data_fim
+};
+
+/* Mapeamento de colunas do SECE109 (importação CSV ou JSON e respostas da ponte).
+   Campo lógico -> nomes de coluna aceitos (sem diferenciar maiúsculas, acentos, "_" e espaços). */
+const MAPA_SECE109 = {
+  numero_oc:         ['numero_oc','numocp','num_ocp','nro_oc','oc','numero'],
+  data_emissao:      ['data_emissao','datemi','fecha_emision','data_oc'],
+  fornecedor_codigo: ['fornecedor_codigo','codfor','cod_fornecedor','cod_proveedor','proveedor'],
+  fornecedor_nome:   ['fornecedor_nome','nomfor','razao_social','nombre_proveedor','fornecedor'],
+  comprador:         ['comprador','nomcpr','usuario_comprador'],
+  situacao:          ['situacao','sitocp','situacion','status','estado'],
+  codpro:            ['codpro','codigo_produto','cod_producto','item'],
+  descricao:         ['descricao','despro','cplipo','descripcion','produto'],
+  qtd_pedida:        ['qtd_pedida','qtdped','cantidad_pedida','quantidade'],
+  qtd_recebida:      ['qtd_recebida','qtdrec','cantidad_recibida'],
+  qtd_pendente:      ['qtd_pendente','qtdabe','saldo_pendente','cantidad_pendiente'],
+  preco_unitario:    ['preco_unitario','preuni','precio_unitario','preco'],
+  data_prevista:     ['data_prevista','datent','fecha_entrega','previsao_entrega'],
+  ano_mes:           ['ano_mes','anomes','periodo','mes'],
+  estoque_final:     ['estoque_final','saldo_final','stock_final','qtdest','estoque'],
+  estoque_atual:     ['estoque_atual','saldo_atual','stock_actual'],
+  data_entrada:      ['data_entrada','datrec','fecha_entrada','data_recebimento'],
+  custo_unitario:    ['custo_unitario','custo_compra','preco_entrada','precio_compra','vlruni'],
+};
+
+const LIMITES_PADRAO = { cobAlerta:3, cobCritico:6, devAlerta:3, devCritico:6, tendAlerta:-20,
+  custoAlerta:5, custoCritico:10, prazoDias:60, excessoDias:120 };
+const DEF_LIMITES = [
+  ['cobAlerta','Cobertura do pedido: alerta acima de','meses'],
+  ['cobCritico','Cobertura do pedido: crítico acima de','meses'],
+  ['devAlerta','Devolução sobre venda: alerta acima de','%'],
+  ['devCritico','Devolução sobre venda: crítico acima de','%'],
+  ['tendAlerta','Tendência (3 meses): alerta abaixo de','%'],
+  ['custoAlerta','Preço da OC sobre último custo: alerta acima de','%'],
+  ['custoCritico','Preço da OC sobre último custo: crítico acima de','%'],
+  ['prazoDias','Prazo de entrega','dias'],
+  ['excessoDias','Excesso: cobertura após a chegada acima de','dias'],
+];
+const METRICAS = ['VENTA','QTD_VEN','DEVOLUCION','CREDITO_DESC','CREDITO_ACU','BONIFICACION','DEV_BONIFICACION','DESC_GS','BRUTO_GS','CTD_DEV'];
+
+/* =====================================================================
+   UTILITÁRIOS
+   ===================================================================== */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dormir = ms => new Promise(r => setTimeout(r, ms));
+const soma = arr => arr.reduce((a, b) => a + (b || 0), 0);
+const sepMil = n => String(Math.abs(Math.round(n))).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const ok = n => n != null && isFinite(n);
+const gs = n => ok(n) ? (Math.round(n) < 0 ? 'G$ -' : 'G$ ') + sepMil(n) : '—';
+const un = n => ok(n) ? (Math.round(n) < 0 ? '−' : '') + sepMil(n) : '—';
+const dec = (n, d = 1) => (n < 0 ? '−' : '') + Math.abs(n).toFixed(d).replace('.', ',');
+const pct = (n, d = 1) => ok(n) ? dec(n, d) + '%' : '—';
+const pctS = (n, d = 1) => ok(n) ? (n > 0 ? '+' : '') + dec(n, d) + '%' : '—';
+function abrev(n){
+  if (!ok(n)) return '—';
+  const a = Math.abs(n), f = (v, s) => dec(v, v < 10 ? 1 : 0).replace(',0', '') + s;
+  if (a >= 1e9) return f(n / 1e9, ' bi');
+  if (a >= 1e6) return f(n / 1e6, ' mi');
+  if (a >= 1e3) return f(n / 1e3, ' mil');
+  return String(Math.round(n));
+}
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const chaveMes = d => `${d.getFullYear()}${pad(d.getMonth() + 1)}`;
+const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const rotMes = k => MESES[+k.slice(4) - 1];
+const rotMesAno = k => MESES[+k.slice(4) - 1] + ' ' + k.slice(0, 4);
+const dataBR = s => { if (!s) return '—'; const [y, m, d] = s.slice(0, 10).split('-'); return `${d}/${m}/${y}`; };
+const dataObj = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const somaDias = (s, n) => { const d = dataObj(s); d.setDate(d.getDate() + n); return ymd(d); };
+const diasEntre = (a, b) => Math.round((dataObj(b) - dataObj(a)) / 86400000);
+const diasNoMes = k => new Date(+k.slice(0, 4), +k.slice(4), 0).getDate();
+const anoMes = v => { const s = String(v ?? '').replace(/\D/g, ''); return s.length >= 6 ? s.slice(0, 6) : ''; };
+function parseData(v){
+  if (v == null || v === '') return null;
+  const s = String(v).trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
+  m = s.match(/^(\d{1,2})[^\d](\d{1,2})[^\d](\d{4})/);
+  if (m) return `${m[3]}-${pad(m[2])}-${pad(m[1])}`;
+  m = s.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  return null;
+}
+function parseNum(v){
+  if (typeof v === 'number') return v;
+  let s = String(v ?? '').trim().replace(/[^\d,.\-]/g, '');
+  if (!s) return NaN;
+  if (s.includes(',') && s.includes('.')) {
+    s = s.lastIndexOf(',') > s.lastIndexOf('.') ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+  } else if (s.includes(',')) s = s.replace(',', '.');
+  else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+  return Number(s);
+}
+const normCol = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+function hash(s){ let h = 2166136261 >>> 0; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return h; }
+function rng(seed){ let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+/* Armazenamento local seguro (só histórico de decisões e limites; NUNCA o token). */
+const MEM = {};
+const LS = {
+  get(k, def){ try { const v = localStorage.getItem(k); if (v != null) return JSON.parse(v); } catch (e) {} return k in MEM ? MEM[k] : def; },
+  set(k, v){ MEM[k] = v; try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+
+/* =====================================================================
+   RECORTE: últimos 12 meses fechados (exclui o mês corrente)
+   ===================================================================== */
+function calcRecorte(hoje){
+  const y = hoje.getFullYear(), m = hoje.getMonth();
+  const meses = [];
+  for (let i = 12; i >= 1; i--) meses.push(chaveMes(new Date(y, m - i, 1)));
+  const ini = ymd(new Date(y, m - 12, 1)), fim = ymd(new Date(y, m, 0));
+  return { hoje: ymd(hoje), hojeDia: hoje.getDate(), meses, mesAnterior: chaveMes(new Date(y, m - 13, 1)),
+    ini, fim, iniEstoque: ymd(new Date(y, m - 13, 1)), diasRecorte: diasEntre(ini, fim) + 1 };
+}
+const R = calcRecorte(new Date());
+
+/* =====================================================================
+   CONCORRÊNCIA: no máximo 2 requisições simultâneas
+   ===================================================================== */
+class Limitador {
+  constructor(n){ this.n = n; this.ativos = 0; this.fila = []; this.pico = 0; }
+  async run(fn){
+    if (this.ativos < this.n) this.ativos++;
+    else await new Promise(r => this.fila.push(r));          // a vaga é transferida por quem sai
+    this.pico = Math.max(this.pico, this.ativos);
+    try { return await fn(); }
+    finally { const prox = this.fila.shift(); if (prox) prox(); else this.ativos--; }
+  }
+}
+const LIMITE = new Limitador(2);
+
+/* =====================================================================
+   CLIENTE CHIPA
+   ===================================================================== */
+class ChipaCliente {
+  constructor(base, token){ this.base = String(base || '/api/v1').replace(/\/+$/, ''); this.token = token; }
+  async _fetch(url, opts){
+    const esperas = [5000, 15000, 30000];                     // 502/503: base atualiza a cada 30 min
+    for (let t = 0; ; t++) {
+      let r;
+      try { r = await LIMITE.run(() => fetch(url, opts)); }
+      catch (e) { throw new Error(`Falha de rede ou CORS (${e.message}). No modo Chipa a página precisa rodar na origem chipa.sanjosesa.com.py.`); }
+      if ((r.status === 502 || r.status === 503) && t < esperas.length) {
+        avisar(`Chipa respondeu ${r.status} (base atualizando). Nova tentativa em ${esperas[t] / 1000} segundos…`);
+        await dormir(esperas[t]);
+        continue;
+      }
+      return r;
+    }
+  }
+  async q(caminho, params) {
+    const todas = [];
+    for (let pagina = 1; ; pagina++) {
+      const p = new URLSearchParams({...params, tamanho: 50000, pagina});
+      const url = `${this.base}/${caminho}?${p}`;
+      if (url.length > 8000) throw new Error(`URL de ${url.length} bytes; use subconsulta`);
+      const r = await this._fetch(url, {headers:{Authorization:"Bearer "+this.token, Accept:"application/json"}});
+      if (r.status === 504) throw new Error(`HTTP 504 em ${caminho}: a consulta passou do limite de 30 segundos da API (não é repetida). Reduza o período ou o filtro.`);
+      if (!r.ok) throw new Error(`HTTP ${r.status} em ${caminho}`);
+      const j = await r.json();
+      if (j.erro) throw new Error(`${j.erro.codigo}: ${j.erro.mensagem}`);
+      if (j.meta && j.meta.truncado) throw new Error(`${caminho} veio truncado`);
+      todas.push(...(j.dados||[]));
+      if (!(j.meta && j.meta.temMais)) return todas;
+      if (pagina > 40) throw new Error("mais de 40 paginas");
+    }
+  }
+}
+function clienteChipa(){
+  if (!S.token) throw new Error('Informe o token do Chipa em "Fonte de dados e configuração".');
+  return new ChipaCliente(S.base, S.token);
+}
+
+/* Normalização das respostas do Chipa: descarta custo e margem; métricas viram número;
+   campos COD*, NUM*, USU_COD*, USU_NUM* ficam texto (CODCAR com trim). */
+function normalizarChipa(linhas){
+  return (linhas || []).map(l => {
+    const o = {};
+    for (const [k, v] of Object.entries(l || {})) {
+      const K = String(k).toUpperCase();
+      if (K.includes('CUS') || K.includes('MARGEM') || K.includes('MARGEN')) continue;
+      if (/^(COD|NUM|USU_COD|USU_NUM)/.test(K)) o[K] = v == null ? '' : (K === 'CODCAR' ? String(v).trim() : String(v));
+      else if (METRICAS.includes(K)) { const n = Number(v); o[K] = isFinite(n) ? n : 0; }
+      else o[K] = v == null ? '' : String(v);
+    }
+    return o;
+  });
+}
+async function consultaComercial(caminho, params){
+  const bruto = S.modo === 'chipa'
+    ? await clienteChipa().q(caminho, params)
+    : await LIMITE.run(() => Exemplo.comercial(caminho, params));
+  return normalizarChipa(bruto);
+}
+
+/* =====================================================================
+   COMPRAS (adaptador separado): exemplo | ponte Chipa | SECE109 importado
+   ===================================================================== */
+function mapearCompras(l){
+  const idx = {};
+  for (const k of Object.keys(l || {})) idx[normCol(k)] = l[k];
+  const o = {};
+  for (const [campo, nomes] of Object.entries(MAPA_SECE109)) {
+    for (const n of nomes) { const v = idx[normCol(n)]; if (v != null && v !== '') { o[campo] = v; break; } }
+  }
+  for (const c of ['qtd_pedida','qtd_recebida','qtd_pendente','preco_unitario','estoque_final','estoque_atual','custo_unitario'])
+    if (c in o) { const n = parseNum(o[c]); if (isFinite(n)) o[c] = n; else delete o[c]; }
+  for (const c of ['data_emissao','data_prevista','data_entrada']) if (c in o) o[c] = parseData(o[c]);
+  if ('ano_mes' in o) o.ano_mes = anoMes(o.ano_mes);
+  for (const c of ['numero_oc','codpro','fornecedor_codigo']) if (c in o) o[c] = String(o[c]).trim();
+  o.sit = classSituacao(o.situacao);
+  return o;
+}
+/* Valores de situação a confirmar com o SECE109. */
+function classSituacao(s){
+  const t = normCol(s || '');
+  if (!t) return 'aberta';
+  if (/cancel|anul/.test(t)) return 'cancelada';
+  if (/aguard|aprovacao|abert|emitid|digit/.test(t)) return 'aberta';
+  if (/receb|conclu|total/.test(t)) return 'recebida';
+  if (/aprov|liber|fech|confirm|parcial|pend/.test(t)) return 'aprovada';
+  return 'aberta';
+}
+function agruparOCs(linhas){
+  const m = new Map();
+  for (const l of linhas) {
+    if (!l.numero_oc || !l.codpro) continue;
+    if (!m.has(l.numero_oc)) m.set(l.numero_oc, { numero: l.numero_oc, data: l.data_emissao || '', comprador: l.comprador || '',
+      status: l.sit === 'aberta' ? 'Aguardando aprovação' : (l.situacao || l.sit),
+      fornecedor: { codigo: l.fornecedor_codigo || '', nome: l.fornecedor_nome || '' }, itens: [] });
+    m.get(l.numero_oc).itens.push({ codpro: l.codpro, descricao: l.descricao || '', quantidade: l.qtd_pedida || 0, preco_unitario: l.preco_unitario || 0 });
+  }
+  return m;
+}
+const resumoOC = oc => ({ numero: oc.numero, data: oc.data, comprador: oc.comprador, fornecedor: oc.fornecedor,
+  valor: soma(oc.itens.map(i => i.quantidade * i.preco_unitario)), nItens: oc.itens.length });
+function pendentesDeLinhas(linhas, f){
+  const cods = new Set(f.codpros);
+  const out = [], vistos = new Set();
+  for (const l of linhas) {
+    if (l.sit !== 'aprovada' && !(l.qtd_pendente > 0 && l.sit !== 'aberta' && l.sit !== 'cancelada')) continue;
+    if (!l.codpro || l.numero_oc === f.excluir) continue;
+    const q = l.qtd_pendente ?? ((l.qtd_pedida || 0) - (l.qtd_recebida || 0));
+    if (!(q > 0)) continue;
+    if (!cods.has(l.codpro) && !(f.fornecedor && l.fornecedor_codigo === f.fornecedor)) continue;
+    const k = l.numero_oc + '|' + l.codpro; if (vistos.has(k)) continue; vistos.add(k);
+    out.push({ numero: l.numero_oc, fornecedor: { codigo: l.fornecedor_codigo || '', nome: l.fornecedor_nome || '' },
+      codpro: l.codpro, descricao: l.descricao || '', qtd_pendente: q, data_prevista: l.data_prevista || null });
+  }
+  return out;
+}
+function estoqueDeLinhas(linhas, codpro){
+  const rows = linhas.filter(l => l.codpro === codpro);
+  const meses = rows.filter(l => l.ano_mes && l.estoque_final != null).map(l => ({ ano_mes: l.ano_mes, estoque_final: l.estoque_final }));
+  const at = rows.find(l => l.estoque_atual != null);
+  return { meses, atual: at ? at.estoque_atual : null };
+}
+function custosDeLinhas(linhas, codpro){
+  return linhas.filter(l => l.codpro === codpro && l.custo_unitario > 0)
+    .map(l => ({ ano_mes: l.ano_mes || anoMes(l.data_entrada), data_entrada: l.data_entrada || null, custo_unitario: l.custo_unitario }));
+}
+
+async function qCompras(chave, params){
+  const caminho = ENDPOINTS_COMPRAS[chave];
+  if (!caminho || /TODO/.test(caminho))
+    throw new Error(`Endpoint de compras "${chave}" ainda não configurado (a confirmar com o relatório SECE109). Importe o SECE109 em "Fonte de dados e configuração" ou ajuste ENDPOINTS_COMPRAS no script.`);
+  const linhas = await clienteChipa().q(caminho, params);
+  return linhas.map(mapearCompras);
+}
+const ComprasPonte = {
+  async listarAbertas(){ return [...agruparOCs((await qCompras('ocsAbertas', {})).filter(l => l.sit === 'aberta')).values()].map(resumoOC); },
+  async obterOC(n){ const m = agruparOCs(await qCompras('ocItens', { numero: n })); const oc = m.get(n) || [...m.values()][0]; if (!oc) throw new Error(`OC nº ${n} não encontrada.`); return oc; },
+  async pendentes(f){
+    const [a, b] = await Promise.all([
+      qCompras('ocsPendentes', { codpro: f.codpros.join(',') }),
+      f.fornecedor ? qCompras('ocsPendentes', { proveedor: f.fornecedor }) : Promise.resolve([]) ]);
+    return pendentesDeLinhas([...a, ...b].map(l => (l.sit === 'aberta' && l.qtd_pendente > 0 ? { ...l, sit: 'aprovada' } : l)), f);
+  },
+  async estoque(codpro){
+    const rows = await qCompras('estoqueMensal', { codpro, data_ini: R.iniEstoque, data_fim: R.fim });
+    const r = estoqueDeLinhas(rows, codpro);
+    if (r.atual == null) { try { r.atual = estoqueDeLinhas(await qCompras('estoqueAtual', { codpro }), codpro).atual; } catch (e) { /* usa o último mês */ } }
+    return r;
+  },
+  async custos(codpro){ return custosDeLinhas(await qCompras('custoMensal', { codpro, data_ini: R.ini, data_fim: R.fim }), codpro); },
+};
+const ComprasImportado = {
+  d(){ return S.sece109; },
+  async listarAbertas(){ return [...agruparOCs(this.d().linhasOC.filter(l => l.sit === 'aberta')).values()].map(resumoOC); },
+  async obterOC(n){ const oc = agruparOCs(this.d().linhasOC.filter(l => l.numero_oc === n)).get(n); if (!oc) throw new Error(`OC nº ${n} não está no SECE109 importado.`); return oc; },
+  async pendentes(f){ return pendentesDeLinhas(this.d().linhasOC, f); },
+  async estoque(codpro){ const r = estoqueDeLinhas(this.d().estoque, codpro); if (!r.meses.length && r.atual == null) throw new Error(`Sem estoque de ${codpro} no SECE109 importado.`); return r; },
+  async custos(codpro){
+    const c = custosDeLinhas(this.d().custos, codpro);
+    if (c.length) return c;
+    return this.d().linhasOC.filter(l => l.codpro === codpro && l.data_entrada && (l.qtd_recebida || 0) > 0 && l.preco_unitario > 0)
+      .map(l => ({ ano_mes: anoMes(l.data_entrada), data_entrada: l.data_entrada, custo_unitario: l.preco_unitario }));
+  },
+};
+const ComprasExemplo = {
+  run(fn){ return LIMITE.run(async () => { await dormir(30 + Math.random() * 90); return fn(); }); },
+  listarAbertas(){ return this.run(() => MUNDO.fila.map(resumoOC)); },
+  obterOC(n){ return this.run(() => { const oc = MUNDO.fila.find(o => o.numero === n); if (!oc) throw new Error(`OC nº ${n} não encontrada entre as OCs em aberto (exemplo: ${MUNDO.fila.map(o => o.numero).join(', ')}).`); return JSON.parse(JSON.stringify(oc)); }); },
+  pendentes(f){ return this.run(() => MUNDO.pend.filter(p => p.numero !== f.excluir && (f.codpros.includes(p.codpro) || p.fornecedor.codigo === f.fornecedor)).map(p => ({ ...p }))); },
+  estoque(codpro){ return this.run(() => { const s = simItem(codpro); return { meses: s.estoque, atual: s.atual }; }); },
+  custos(codpro){ return this.run(() => simItem(codpro).custos.map(c => ({ ...c }))); },
+};
+const Compras = {
+  fonte(){ return S.sece109 ? 'sece109' : (S.modo === 'chipa' ? 'ponte' : 'exemplo'); },
+  impl(){ return { exemplo: ComprasExemplo, ponte: ComprasPonte, sece109: ComprasImportado }[this.fonte()]; },
+  listarAbertas(){ return this.impl().listarAbertas(); },
+  obterOC(n){ return this.impl().obterOC(n); },
+  pendentes(f){ return this.impl().pendentes(f); },
+  estoque(c){ return this.impl().estoque(c); },
+  custos(c){ return this.impl().custos(c); },
+};
+
+/* =====================================================================
+   MODO EXEMPLO: dados fictícios determinísticos e coerentes
+   (estoque = estoque anterior + entradas − vendas; custo só em meses com entrada)
+   ===================================================================== */
+const PERFIS = {
+  '05040.0075': { base: 900, incl: 0.06,  dev: 0.012, bon: 0.02,  desc: 0.045, pv: 68000, custo0: 47500, drift: 0.004, estoqueAtual: 2000 },
+  '05040.0112': { base: 800, incl: -0.42, dev: 0.022, bon: 0.035, desc: 0.06,  pv: 79000, custo0: 55000, drift: 0.003, estoqueAtual: 1500 },
+  '05040.0231': { base: 300, incl: 0.02,  dev: 0.075, bon: 0.05,  desc: 0.08,  pv: 99000, custo0: 66000, drift: 0.004, estoqueAtual: 250 },
+  '05040.0310': { base: 0, zero: true,    dev: 0, bon: 0, desc: 0, pv: 58000, custo0: 40000, drift: 0, estoqueAtual: 240 },
+  '05040.0400': { base: 500, incl: 0.1,   dev: 0.02,  bon: 0.03,  desc: 0.05,  pv: 42000, custo0: 29000, drift: 0.006, estoqueAtual: 700 },
+};
+function perfil(codpro){
+  if (PERFIS[codpro]) return PERFIS[codpro];
+  const r = rng(hash('p' + codpro));
+  const base = Math.round(80 + r() * 900), pv = Math.round((15000 + r() * 90000) / 500) * 500;
+  return PERFIS[codpro] = { base, incl: r() * 0.6 - 0.3, dev: 0.004 + r() * 0.055, bon: r() * 0.05, desc: 0.02 + r() * 0.07, pv,
+    custo0: Math.round(pv * (0.58 + r() * 0.12) / 10) * 10, drift: -0.004 + r() * 0.018, estoqueAtual: Math.round(base * (0.4 + r() * 2.6)) };
+}
+const SIM = new Map();
+function simItem(codpro){
+  if (SIM.has(codpro)) return SIM.get(codpro);
+  const p = perfil(codpro), m13 = [R.mesAnterior, ...R.meses];
+  const serie = R.meses.map((k, i) => {
+    if (p.zero) return null;
+    const r = rng(hash(codpro + '|' + k));
+    const sazon = 1 + 0.08 * Math.sin(+k.slice(4) / 12 * 2 * Math.PI);
+    const f = Math.max(0.05, 1 + p.incl * (i - 5.5) / 5.5) * sazon * (0.9 + r() * 0.2);
+    const qtd = Math.max(0, Math.round(p.base * f)), venda = qtd * p.pv;
+    const devF = 0.6 + r() * 0.8, bon = venda * p.bon * (0.7 + r() * 0.6);
+    const desc = venda * p.desc / (1 - p.desc);
+    return { k, qtd, venda, dev: venda * p.dev * devF, ctd: Math.round(qtd * p.dev * devF), bon, devbon: bon * 0.04,
+      cdesc: venda * 0.008, cacu: venda * 0.015, desc, bruto: venda + desc };
+  });
+  const vend = serie.map(s => s ? s.qtd : 0);
+  const vmd = soma(vend) / R.diasRecorte;
+  const E = new Array(13), ent = new Array(13).fill(0);
+  E[12] = p.estoqueAtual + Math.round(vmd * (R.hojeDia - 1));
+  const cap = 2.5 * p.base, Q = Math.round(2 * p.base / 10) * 10;
+  for (let i = 12; i >= 1; i--) {               // reconstrói para trás: inicial = final + vendas − entradas
+    let ini = E[i] + vend[i - 1];
+    if (p.base > 0 && ini > cap) { ent[i] = Q; ini -= Q; }
+    E[i - 1] = ini;
+  }
+  const custos = [];
+  for (let i = 1; i <= 12; i++) if (ent[i] > 0) {
+    const k = m13[i], r = rng(hash('c' + codpro + k));
+    custos.push({ ano_mes: k, data_entrada: `${k.slice(0, 4)}-${k.slice(4)}-${pad(3 + Math.floor(r() * 22))}`,
+      custo_unitario: Math.round(p.custo0 * Math.pow(1 + p.drift, i) * (0.985 + r() * 0.03) / 10) * 10 });
+  }
+  const o = { serie, estoque: m13.map((k, i) => ({ ano_mes: k, estoque_final: E[i] })), atual: p.estoqueAtual, custos };
+  SIM.set(codpro, o);
+  return o;
+}
+const F0127 = { codigo: '0127', nome: 'Distribuidora Alimentos del Sur S.A.' };
+const FILA_EXEMPLO = [
+  { numero: '31716', dias: -3, comprador: 'Rodrigo Benítez', fornecedor: F0127, itens: [
+    { codpro: '05040.0075', descricao: 'Galletita dulce vainilla 400 g · caja 12', quantidade: 1800, fatorPreco: 1.025 },
+    { codpro: '05040.0112', descricao: 'Galletita crackers 200 g · caja 24', quantidade: 3600, fatorPreco: 1.075 },
+    { codpro: '05040.0231', descricao: 'Wafer chocolate 140 g · caja 30', quantidade: 1000, fatorPreco: 1.13 },
+    { codpro: '05040.0310', descricao: 'Bizcochuelo marmolado 250 g · caja 12', quantidade: 500, precoFixo: 45000 } ] },
+  { numero: '31702', dias: -7, comprador: 'Mirna Gauto', fornecedor: { codigo: '0219', nome: 'Lácteos Itapúa S.R.L.' }, gerar: { prefixo: '03020', n: 3, tipo: 'lacteo' } },
+  { numero: '31721', dias: -2, comprador: 'Rodrigo Benítez', fornecedor: { codigo: '0088', nome: 'Bebidas del Paraná S.A.' }, gerar: { prefixo: '02010', n: 5, tipo: 'bebida' } },
+  { numero: '31690', dias: -10, comprador: 'Carlos Ayala', fornecedor: { codigo: '0305', nome: 'Limpieza Total Paraguay S.A.' }, gerar: { prefixo: '08030', n: 2, tipo: 'limpeza' } },
+  { numero: '31728', dias: -1, comprador: 'Mirna Gauto', fornecedor: { codigo: '0412', nome: 'Molinos del Este S.A.' }, gerar: { prefixo: '04010', n: 3, tipo: 'farinha' } },
+];
+const NOMES_EXEMPLO = {
+  lacteo: ['Leche entera UHT 1 L · caja 12', 'Yogur bebible frutilla 1 L · caja 6', 'Dulce de leche 400 g · caja 12', 'Queso Paraguay 1 kg'],
+  bebida: ['Gaseosa cola 2 L · pack 6', 'Agua mineral 500 ml · pack 12', 'Jugo naranja 1 L · caja 12', 'Tereré mix 500 g · caja 20', 'Gaseosa guaraná 2 L · pack 6'],
+  limpeza: ['Detergente limón 750 ml · caja 12', 'Lavandina 2 L · caja 8'],
+  farinha: ['Harina 000 1 kg · fardo 10', 'Almidón de mandioca 1 kg · fardo 10', 'Harina de maíz 1 kg · fardo 10'],
+};
+const MOTIVOS_EXEMPLO = [['01','Producto vencido'],['02','Avería en transporte'],['03','Error de pedido'],['04','Rechazo del cliente'],['05','Baja rotación'],['06','Embalaje dañado']];
+function precoDe(codpro, fator){ const s = simItem(codpro); const ult = s.custos.length ? s.custos[s.custos.length - 1].custo_unitario : perfil(codpro).custo0; return Math.round(ult * fator / 100) * 100; }
+function construirMundo(){
+  const fila = FILA_EXEMPLO.map(def => {
+    let itens;
+    if (def.itens) itens = def.itens.map(it => ({ codpro: it.codpro, descricao: it.descricao, quantidade: it.quantidade,
+      preco_unitario: it.precoFixo ?? precoDe(it.codpro, it.fatorPreco) }));
+    else {
+      const r = rng(hash('oc' + def.numero)), usados = new Set();
+      itens = [];
+      for (let i = 0; i < def.gerar.n; i++) {
+        let cod; do { cod = def.gerar.prefixo + '.' + String(100 + Math.floor(r() * 800)).padStart(4, '0'); } while (usados.has(cod));
+        usados.add(cod);
+        const p = perfil(cod);
+        itens.push({ codpro: cod, descricao: NOMES_EXEMPLO[def.gerar.tipo][i % NOMES_EXEMPLO[def.gerar.tipo].length],
+          quantidade: Math.max(10, Math.round(p.base * (1.2 + r() * 4) / 10) * 10), preco_unitario: precoDe(cod, 0.97 + r() * 0.15) });
+      }
+    }
+    return { numero: def.numero, data: somaDias(R.hoje, def.dias), comprador: def.comprador, status: 'Aguardando aprovação', fornecedor: def.fornecedor, itens };
+  });
+  const pend = [
+    { numero: '31655', fornecedor: F0127, codpro: '05040.0112', descricao: 'Galletita crackers 200 g · caja 24', qtd_pendente: 1600, data_prevista: somaDias(R.hoje, 15) },
+    { numero: '31640', fornecedor: F0127, codpro: '05040.0400', descricao: 'Alfajor triple chocolate 60 g · caja 24', qtd_pendente: 600, data_prevista: somaDias(R.hoje, -12) },
+    { numero: '31611', fornecedor: { codigo: '0388', nome: 'Comercial Mbaracayú S.A.' }, codpro: '05040.0231', descricao: 'Wafer chocolate 140 g · caja 30', qtd_pendente: 200, data_prevista: somaDias(R.hoje, 5) },
+  ];
+  fila.slice(1).forEach(oc => {
+    const r = rng(hash('pend' + oc.numero));
+    if (r() < 0.7) {
+      const it = oc.itens[Math.floor(r() * oc.itens.length)];
+      pend.push({ numero: String(+oc.numero - 15 - Math.floor(r() * 60)), fornecedor: oc.fornecedor, codpro: it.codpro, descricao: it.descricao,
+        qtd_pendente: Math.round(perfil(it.codpro).base * (0.8 + r()) / 10) * 10, data_prevista: somaDias(R.hoje, -10 + Math.floor(r() * 40)) });
+    }
+  });
+  return { fila, pend };
+}
+const MUNDO = construirMundo();
+
+const Exemplo = {
+  linha(o, extra){
+    const t = v => (Math.round(v * 100) / 100).toFixed(2);
+    return { ...extra, VENTA: t(o.venda), QTD_VEN: String(Math.round(o.qtd)), DEVOLUCION: t(o.dev), CREDITO_DESC: t(o.cdesc),
+      CREDITO_ACU: t(o.cacu), BONIFICACION: t(o.bon), DEV_BONIFICACION: t(o.devbon), DESC_GS: t(o.desc), BRUTO_GS: t(o.bruto),
+      CTD_DEV: String(Math.round(o.ctd)),
+      CUSVEN: t(o.venda * 0.68), CUSDEV: t(o.dev * 0.68), MARGEN_GS: t(o.venda * 0.32) };   // descartados na normalização
+  },
+  vazio(){ return { qtd: 0, venda: 0, dev: 0, ctd: 0, bon: 0, devbon: 0, cdesc: 0, cacu: 0, desc: 0, bruto: 0 }; },
+  somar(a, b, f = 1){ for (const k of Object.keys(a)) a[k] += (b[k] || 0) * f; return a; },
+  codprosFornecedor(cod){
+    const s = new Set();
+    MUNDO.fila.filter(o => o.fornecedor.codigo === cod).forEach(o => o.itens.forEach(i => s.add(i.codpro)));
+    MUNDO.pend.filter(p => p.fornecedor.codigo === cod).forEach(p => s.add(p.codpro));
+    if (!s.size && S.oc) S.oc.itens.forEach(i => s.add(i.codpro));
+    return [...s];
+  },
+  async comercial(caminho, params){
+    await dormir(30 + Math.random() * 90);
+    if (caminho === ENDPOINTS_COMERCIAL.motivos) return MOTIVOS_EXEMPLO.map(([c, n]) => ({ CODMOT: c, DESMOT: n }));
+    if (caminho !== ENDPOINTS_COMERCIAL.fattotdim) throw new Error('Caminho desconhecido no modo exemplo: ' + caminho);
+    if (!params.data_ini || !params.data_fim || !params.col) throw new Error('data_ini, data_fim e col são obrigatórios');
+    const cods = params.codpro ? [params.codpro] : params.proveedor ? this.codprosFornecedor(params.proveedor) : [];
+    const fator = params.proveedor ? 1.8 + rng(hash('f' + params.proveedor))() * 1.5 : 1;
+    const porMes = R.meses.map(k => { const a = this.vazio(); cods.forEach(c => { const s = simItem(c).serie[R.meses.indexOf(k)]; if (s) this.somar(a, s, fator); }); return a; });
+    const tot = porMes.reduce((a, b) => this.somar(a, b), this.vazio());
+    if (tot.qtd <= 0) return [];
+    const col = String(params.col).toUpperCase();
+    if (col === 'ANO_MES') return porMes.map((o, i) => o.qtd > 0 ? this.linha(o, { ANO_MES: R.meses[i].slice(0, 4) + '-' + R.meses[i].slice(4) }) : null).filter(Boolean);
+    if (col === 'TODO') return [this.linha(tot, { TODO: 'TODO' })];
+    const r = rng(hash(col + (params.codpro || params.proveedor)));
+    if (col === 'CODMOT') {
+      const pesos = MOTIVOS_EXEMPLO.map(() => Math.pow(r(), 2.2)), sp = soma(pesos);
+      const linhas = [this.linha({ ...tot, dev: 0, ctd: 0 }, { CODMOT: '0' })];
+      MOTIVOS_EXEMPLO.forEach(([c], i) => { const w = pesos[i] / sp; linhas.push(this.linha({ ...this.vazio(), dev: tot.dev * w, ctd: tot.ctd * w }, { CODMOT: c })); });
+      return linhas;
+    }
+    if (col === 'USU_NUMCLA') {
+      const ac = ['2025041', '2026007', '2026019'].map(n => [n, 0.3 + r()]), sp = soma(ac.map(a => a[1]));
+      const linhas = [this.linha({ ...tot, venda: tot.venda * 0.4, cacu: 0 }, { USU_NUMCLA: '0' })];
+      ac.forEach(([n, w]) => linhas.push(this.linha({ ...this.vazio(), venda: tot.venda * 0.6 * w / sp, cacu: tot.cacu * w / sp }, { USU_NUMCLA: n })));
+      return linhas;
+    }
+    return [this.linha(tot, { [col]: '—' })];
+  },
+};
+
+/* =====================================================================
+   ESTADO
+   ===================================================================== */
+const S = {
+  modo: 'exemplo', base: '/api/v1', token: '',          // token só em memória
+  limites: { ...LIMITES_PADRAO, ...LS.get('aprovacao-oc:limites', {}) },
+  sece109: null, fila: { st: 'carregando' }, ocNum: '31716', oc: null, ocErro: null, origemOC: 'exemplo',
+  dados: null, motivosTab: null, sel: 0, carga: 0, abertura: 0, cargaFila: 0,
+};
+
+/* =====================================================================
+   CARGA
+   ===================================================================== */
+function comoBloco(p){ return p.then(v => ({ st: 'ok', v }), e => ({ st: 'erro', err: e && e.message ? e.message : String(e) })); }
+function carregarFila(){
+  const tk = ++S.cargaFila;
+  S.fila = { st: 'carregando' }; renderFila();
+  comoBloco(Compras.listarAbertas()).then(r => { if (tk !== S.cargaFila) return; S.fila = r; renderFila(); });
+}
+function carregarMotivos(){
+  S.motivosTab = { st: 'carregando' };
+  comoBloco(consultaComercial(ENDPOINTS_COMERCIAL.motivos, {})).then(r => {
+    if (r.st === 'ok') {
+      const mapa = new Map();
+      for (const l of r.v) {
+        const ks = Object.keys(l), kc = ks.find(k => /^COD/.test(k)), kn = ks.find(k => /NOM|DES/.test(k) && !/^COD/.test(k));
+        if (kc) mapa.set(String(l[kc]).trim(), kn ? String(l[kn]).trim() : '');
+      }
+      S.motivosTab = { st: 'ok', mapa };
+    } else S.motivosTab = r;
+    agendar();
+  });
+}
+async function abrirOC(numero){
+  numero = String(numero || '').trim();
+  $('#erroAbrir').hidden = true;
+  if (!numero) return;
+  const tk = ++S.abertura;
+  S.ocNum = numero; S.oc = null; S.ocErro = null; S.carga++;
+  render();
+  try {
+    const oc = await Compras.obterOC(numero);
+    if (tk !== S.abertura) return;
+    S.oc = oc; S.origemOC = Compras.fonte();
+    carregarAnalise();
+  } catch (e) {
+    if (tk !== S.abertura) return;
+    S.ocErro = e.message; $('#erroAbrir').textContent = e.message; $('#erroAbrir').hidden = false;
+    render();
+  }
+}
+function carregarAnalise(){
+  const tk = ++S.carga, oc = S.oc;
+  const bloco = () => ({ st: 'carregando' });
+  S.dados = { itens: oc.itens.map(() => ({ serie: bloco(), mot: bloco(), est: bloco(), custo: bloco() })), todo: bloco(), acordos: bloco(), pend: bloco() };
+  S.sel = 0;
+  $('#comentario').value = ''; $('#erroDecisao').hidden = true;
+  render();
+  const por = (alvo, chave, p) => comoBloco(p).then(r => { if (tk !== S.carga) return; alvo[chave] = r; agendar(); });
+  if (!S.motivosTab || S.motivosTab.st === 'erro') carregarMotivos();
+  const base = { data_ini: R.ini, data_fim: R.fim }, forn = oc.fornecedor.codigo;
+  oc.itens.forEach((it, i) => {
+    const d = S.dados.itens[i];
+    por(d, 'serie', consultaComercial(ENDPOINTS_COMERCIAL.fattotdim, { ...base, col: 'ANO_MES', codpro: it.codpro }));
+    por(d, 'est', Compras.estoque(it.codpro));
+    por(d, 'custo', Compras.custos(it.codpro));
+    por(d, 'mot', consultaComercial(ENDPOINTS_COMERCIAL.fattotdim, { ...base, col: 'CODMOT', codpro: it.codpro }));
+  });
+  por(S.dados, 'pend', Compras.pendentes({ codpros: oc.itens.map(i => i.codpro), fornecedor: forn, excluir: oc.numero }));
+  if (forn) {
+    por(S.dados, 'todo', consultaComercial(ENDPOINTS_COMERCIAL.fattotdim, { ...base, col: 'TODO', proveedor: forn }));
+    por(S.dados, 'acordos', consultaComercial(ENDPOINTS_COMERCIAL.fattotdim, { ...base, col: 'USU_NUMCLA', proveedor: forn }));
+  } else {
+    S.dados.todo = S.dados.acordos = { st: 'erro', err: 'A OC não tem código de fornecedor.' };
+  }
+}
+
+/* =====================================================================
+   ANÁLISE
+   ===================================================================== */
+const ORDEM = { ok: 0, alerta: 1, critico: 2 };
+function nomeMotivo(cod){
+  const c = String(cod ?? '').trim();
+  const m = S.motivosTab && S.motivosTab.st === 'ok' ? S.motivosTab.mapa : null;
+  const n = m ? (m.get(c) || m.get(c.replace(/^0+/, '')) || m.get(c.padStart(2, '0'))) : '';
+  return n ? `${c} · ${n}` : `Código ${c}`;
+}
+function calcItem(i){
+  const it = S.oc.itens[i], d = S.dados.itens[i], L = S.limites;
+  const a = { i, it, subtotal: it.quantidade * it.preco_unitario, sinais: [], faltam: [], erros: [] };
+  const sinal = (nivel, tipo, texto, contra = true) => a.sinais.push({ nivel, tipo, texto, contra, codpro: it.codpro });
+  for (const [k, nome] of [['serie','vendas'],['est','estoque'],['custo','custo'],['mot','motivos']]) {
+    if (d[k].st === 'carregando') a.faltam.push(nome);
+    if (d[k].st === 'erro') a.erros.push(nome);
+  }
+  // Vendas (Chipa)
+  if (d.serie.st === 'ok') {
+    const pm = new Map(), tot = {};
+    METRICAS.forEach(m => tot[m] = 0);
+    for (const r of d.serie.v) {
+      const k = anoMes(r.ANO_MES); if (!R.meses.includes(k)) continue;
+      const acc = pm.get(k) || { qtd: 0, venda: 0 }; acc.qtd += r.QTD_VEN || 0; acc.venda += r.VENTA || 0; pm.set(k, acc);
+      METRICAS.forEach(m => tot[m] += r[m] || 0);
+    }
+    a.serie = R.meses.map(k => ({ k, qtd: pm.get(k)?.qtd || 0, venda: pm.get(k)?.venda || 0 }));
+    a.tot = tot; a.media = tot.QTD_VEN / 12; a.vmd = Math.max(0, tot.QTD_VEN) / R.diasRecorte;
+    a.cobertura = a.media > 0 ? it.quantidade / a.media : null;
+    a.u3 = soma(a.serie.slice(9).map(s => s.qtd)); a.p3 = soma(a.serie.slice(6, 9).map(s => s.qtd));
+    a.tend = a.p3 > 0 ? (a.u3 / a.p3 - 1) * 100 : null;
+    a.devPct = tot.VENTA > 0 ? tot.DEVOLUCION / tot.VENTA * 100 : null;
+    a.bonPct = tot.VENTA > 0 ? tot.BONIFICACION / tot.VENTA * 100 : null;
+    a.descPct = tot.BRUTO_GS > 0 ? tot.DESC_GS / tot.BRUTO_GS * 100 : null;
+    a.semVenda = tot.QTD_VEN <= 0 && tot.VENTA <= 0;
+  }
+  if (d.mot.st === 'ok') {
+    const rows = d.mot.v.filter(r => (r.DEVOLUCION || 0) > 0), tdv = soma(rows.map(r => r.DEVOLUCION));
+    a.motivos = rows.sort((x, y) => y.DEVOLUCION - x.DEVOLUCION).slice(0, 3)
+      .map(r => ({ cod: String(r.CODMOT ?? '').trim(), nome: nomeMotivo(r.CODMOT), valor: r.DEVOLUCION, ctd: r.CTD_DEV || 0, pct: tdv > 0 ? r.DEVOLUCION / tdv * 100 : null }));
+  }
+  // Estoque e giro (Compras)
+  if (d.est.st === 'ok') {
+    const mapa = new Map(d.est.v.meses.map(e => [anoMes(e.ano_mes), e.estoque_final]));
+    const ks = [R.mesAnterior, ...R.meses];
+    a.giro = R.meses.map((k, idx) => {
+      const ef = mapa.has(k) ? mapa.get(k) : null, ei = mapa.has(ks[idx]) ? mapa.get(ks[idx]) : null;
+      const vend = a.serie ? a.serie[idx].qtd : null;
+      const med = ef == null ? null : (ei == null ? ef : (ei + ef) / 2);
+      return { k, ef, vend, med, giro: med > 0 && vend != null ? vend / med : null,
+        cobDias: ef != null && vend > 0 ? ef / (vend / diasNoMes(k)) : null };
+    });
+    const efs = a.giro.filter(g => g.ef != null).map(g => g.ef);
+    a.estMedio = efs.length ? soma(efs) / efs.length : null;
+    a.giroAnual = a.tot && a.estMedio > 0 ? a.tot.QTD_VEN / a.estMedio : null;
+    a.estAtual = d.est.v.atual != null ? d.est.v.atual : (efs.length ? efs[efs.length - 1] : null);
+  }
+  // Custo de compra (Compras)
+  if (d.custo.st === 'ok') {
+    const pm = new Map();
+    for (const c of [...d.custo.v].sort((x, y) => String(x.data_entrada || x.ano_mes).localeCompare(String(y.data_entrada || y.ano_mes)))) {
+      const k = anoMes(c.ano_mes) || anoMes(c.data_entrada);
+      if (R.meses.includes(k) && c.custo_unitario > 0) pm.set(k, c);        // a última entrada do mês prevalece
+    }
+    let ant = null, prim = null;
+    a.custos = R.meses.map(k => {
+      const c = pm.get(k); if (!c) return { k, custo: null };
+      const o = { k, data: c.data_entrada, custo: c.custo_unitario, varMes: ant ? (c.custo_unitario / ant - 1) * 100 : null, varAcum: prim ? (c.custo_unitario / prim - 1) * 100 : null };
+      if (prim == null) prim = c.custo_unitario; ant = c.custo_unitario;
+      return o;
+    });
+    const vals = a.custos.filter(c => c.custo != null).map(c => c.custo);
+    a.ultCusto = vals.length ? vals[vals.length - 1] : null;
+    a.medCusto = vals.length ? soma(vals) / vals.length : null;
+    a.varAcum = vals.length > 1 ? (vals[vals.length - 1] / vals[0] - 1) * 100 : null;
+    a.ocSobreUlt = a.ultCusto ? (it.preco_unitario / a.ultCusto - 1) * 100 : null;
+    a.ocSobreMed = a.medCusto ? (it.preco_unitario / a.medCusto - 1) * 100 : null;
+  }
+  // Pendentes e estoque futuro
+  a.chegada = somaDias(R.hoje, L.prazoDias);
+  if (S.dados.pend.st === 'ok') {
+    a.pend = S.dados.pend.v.filter(p => p.codpro === it.codpro);
+    a.pendAntes = soma(a.pend.filter(p => !p.data_prevista || p.data_prevista <= a.chegada).map(p => p.qtd_pendente));
+    a.pendDepois = soma(a.pend.map(p => p.qtd_pendente)) - a.pendAntes;
+  } else if (S.dados.pend.st === 'carregando') a.faltam.push('pendentes');
+  else a.erros.push('pendentes');
+  if (a.vmd != null && a.estAtual != null) {
+    const pa = a.pendAntes || 0;
+    a.consumo = a.vmd * L.prazoDias;
+    a.projSem = a.estAtual + pa - a.consumo;
+    a.projCom = Math.max(0, a.projSem) + it.quantidade;
+    a.cobAposDias = a.vmd > 0 ? a.projCom / a.vmd : null;
+    a.cobSemDias = a.vmd > 0 ? Math.max(0, a.projSem) / a.vmd : null;
+    a.diasAteRuptura = a.vmd > 0 ? (a.estAtual + pa) / a.vmd : null;
+  }
+  // Sinais
+  if (a.serie) {
+    if (a.semVenda) sinal('critico', 'semvenda', 'Sem venda nos 12 meses do recorte');
+    else {
+      if (a.cobertura > L.cobCritico) sinal('critico', 'cobertura', `Cobertura do pedido de ${dec(a.cobertura)} meses (crítico acima de ${L.cobCritico})`);
+      else if (a.cobertura > L.cobAlerta) sinal('alerta', 'cobertura', `Cobertura do pedido de ${dec(a.cobertura)} meses (alerta acima de ${L.cobAlerta})`);
+      if (a.devPct > L.devCritico) sinal('critico', 'devolucao', `Devolução de ${pct(a.devPct)} sobre venda (crítico acima de ${L.devCritico}%)`);
+      else if (a.devPct > L.devAlerta) sinal('alerta', 'devolucao', `Devolução de ${pct(a.devPct)} sobre venda (alerta acima de ${L.devAlerta}%)`);
+      if (a.tend != null && a.tend < L.tendAlerta) sinal('alerta', 'tendencia', `Vendas em queda: ${pctS(a.tend)} nos últimos 3 meses sobre os 3 anteriores`);
+    }
+  }
+  if (a.ocSobreUlt != null) {
+    if (a.ocSobreUlt > L.custoCritico) sinal('critico', 'custo', `Preço da OC ${pctS(a.ocSobreUlt)} sobre o último custo de compra (${gs(a.ultCusto)})`);
+    else if (a.ocSobreUlt > L.custoAlerta) sinal('alerta', 'custo', `Preço da OC ${pctS(a.ocSobreUlt)} sobre o último custo de compra (${gs(a.ultCusto)})`);
+  }
+  if (a.pend && a.pend.length) sinal('alerta', 'duplicidade', `Já há ${un(soma(a.pend.map(p => p.qtd_pendente)))} un. pendentes de recebimento (OC ${a.pend.map(p => p.numero).join(', ')}): risco de compra duplicada`);
+  if (a.projSem != null && a.projSem < 0 && a.vmd > 0)
+    sinal('critico', 'ruptura', `Vai faltar antes de chegar: ruptura em cerca de ${Math.round(a.diasAteRuptura)} dias, chegada em ${L.prazoDias} dias`, false);
+  if (a.projCom != null) {
+    if (a.vmd > 0 && a.cobAposDias > L.excessoDias) sinal('alerta', 'excesso', `Excesso: cobertura de ${un(a.cobAposDias)} dias após a chegada (limite ${L.excessoDias})`);
+    else if (!(a.vmd > 0) && a.projCom > 0 && a.serie) sinal('alerta', 'excesso', `Excesso: ${un(a.projCom)} un. em estoque após a chegada sem venda que as consuma`);
+  }
+  a.sinais.sort((x, y) => ORDEM[y.nivel] - ORDEM[x.nivel] || (y.contra - x.contra));
+  a.nivel = a.sinais.length ? a.sinais[0].nivel : (a.faltam.length ? 'carregando' : (a.serie ? 'ok' : 'nd'));
+  return a;
+}
+function calcFornecedor(){
+  const f = {};
+  const t = S.dados.todo;
+  if (t.st === 'ok') {
+    const tot = {}; METRICAS.forEach(m => tot[m] = soma(t.v.map(r => r[m])));
+    f.tot = tot;
+    f.devPct = tot.VENTA > 0 ? tot.DEVOLUCION / tot.VENTA * 100 : null;
+    f.bonPct = tot.VENTA > 0 ? tot.BONIFICACION / tot.VENTA * 100 : null;
+    f.acuPct = tot.VENTA > 0 ? tot.CREDITO_ACU / tot.VENTA * 100 : null;
+  }
+  if (S.dados.acordos.st === 'ok') {
+    f.acordos = S.dados.acordos.v.filter(r => (r.CREDITO_ACU || 0) !== 0 && !['', '0'].includes(String(r.USU_NUMCLA ?? '').trim()))
+      .sort((x, y) => y.CREDITO_ACU - x.CREDITO_ACU);
+  }
+  return f;
+}
+function calcGeral(as){
+  const cont = { ok: 0, alerta: 0, critico: 0, outros: 0 };
+  as.forEach(a => { if (a.nivel in cont) cont[a.nivel]++; else cont.outros++; });
+  const carregando = as.some(a => a.faltam.length) || S.dados.pend.st === 'carregando';
+  const todos = as.flatMap(a => a.sinais.map(s => ({ ...s, desc: a.it.descricao })));
+  const contraCrit = todos.filter(s => s.nivel === 'critico' && s.contra);
+  const urg = todos.filter(s => s.nivel === 'critico' && !s.contra);
+  const alertas = todos.filter(s => s.nivel === 'alerta');
+  let rec;
+  if (contraCrit.length) rec = { chave: 'revisar', rot: 'Revisar' };
+  else if (urg.length || alertas.length) rec = { chave: 'ressalva', rot: 'Aprovar com ressalva' };
+  else rec = { chave: 'aprovar', rot: 'Aprovar' };
+  const motivos = [...contraCrit, ...urg, ...alertas].slice(0, 3).map(s => ({ nivel: s.nivel, texto: `${s.codpro} · ${s.texto}` }));
+  if (motivos.length < 3 && !carregando) {
+    const pos = [];
+    if (!todos.some(s => s.tipo === 'cobertura') && as.every(a => a.serie)) pos.push(`Cobertura do pedido de todos os itens até ${S.limites.cobAlerta} meses`);
+    if (!todos.some(s => s.tipo === 'devolucao') && as.every(a => a.serie)) pos.push(`Devolução de todos os itens até ${S.limites.devAlerta}% sobre venda`);
+    if (!todos.some(s => s.tipo === 'custo') && as.some(a => a.ocSobreUlt != null)) pos.push(`Preço da OC alinhado ao último custo de compra (até ${S.limites.custoAlerta}% acima)`);
+    if (!todos.some(s => s.tipo === 'duplicidade') && S.dados.pend.st === 'ok') pos.push('Nenhum item desta OC tem pedido pendente de recebimento');
+    if (!todos.some(s => s.tipo === 'ruptura' || s.tipo === 'excesso') && as.every(a => a.projSem != null)) pos.push(`Estoque projetado na chegada sem ruptura nem excesso (até ${S.limites.excessoDias} dias)`);
+    pos.slice(0, 3 - motivos.length).forEach(t => motivos.push({ nivel: 'ok', texto: t }));
+  }
+  const incompleto = as.some(a => a.erros.length) || ['todo','acordos','pend'].some(k => S.dados[k].st === 'erro');
+  return { cont, rec: carregando && !contraCrit.length ? { chave: 'calc', rot: 'Calculando…' } : rec, motivos, carregando, incompleto,
+    geral: cont.critico ? 'critico' : cont.alerta ? 'alerta' : carregando ? 'carregando' : 'ok' };
+}
+function textoResumo(c){
+  const p = (n, s, pl) => `${n} ${n === 1 ? s : pl}`;
+  return `${p(c.ok, 'item ok', 'itens ok')}, ${c.alerta} em alerta, ${p(c.critico, 'crítico', 'críticos')}`;
+}
+
+/* =====================================================================
+   GRÁFICO (SVG inline): barras + linha opcional + referências
+   ===================================================================== */
+function niceMax(v){ if (!(v > 0)) return 1; const e = Math.pow(10, Math.floor(Math.log10(v))), f = v / e; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * e; }
+function barPath(x, y, w, h, r){ r = Math.min(r, h, w / 2); return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`; }
+function grafico({ meses, barras, linha = null, refs = [], fmtEixo = abrev, tip, alt }){
+  const W = 440, H = 190, pl = 44, pr = 8, pt = 12, pb = 30, n = meses.length, iw = W - pl - pr, ih = H - pt - pb, cw = iw / n, bw = Math.max(4, cw * 0.62);
+  const vals = [...barras, ...(linha || []), ...refs.map(r => r.valor)].filter(v => v != null && isFinite(v));
+  const max = niceMax(Math.max(0, ...vals));
+  const y = v => pt + ih - (Math.max(0, v) / max) * ih;
+  let g = '';
+  [0, 0.5, 1].forEach(f => { const yy = y(max * f); g += `<line x1="${pl}" x2="${W - pr}" y1="${yy}" y2="${yy}" stroke="var(--${f ? 'grid' : 'axis'})" stroke-width="1"/><text x="${pl - 6}" y="${yy + 3}" text-anchor="end">${esc(fmtEixo(max * f))}</text>`; });
+  barras.forEach((v, i) => { if (v > 0) { const h = ih * v / max; g += `<path d="${barPath(pl + i * cw + (cw - bw) / 2, pt + ih - h, bw, h, 3)}" fill="var(--accent)"/>`; } });
+  if (linha) {
+    let d = '', pen = false;
+    linha.forEach((v, i) => { if (v == null) { pen = false; return; } d += `${pen ? 'L' : 'M'}${(pl + i * cw + cw / 2).toFixed(1)},${y(v).toFixed(1)}`; pen = true; });
+    g += `<path d="${d}" fill="none" stroke="var(--serie-2)" stroke-width="2" stroke-linejoin="round"/>`;
+    linha.forEach((v, i) => { if (v != null) g += `<circle cx="${pl + i * cw + cw / 2}" cy="${y(v)}" r="3.5" fill="var(--serie-2)" stroke="var(--surface)" stroke-width="2"/>`; });
+  }
+  refs.forEach((r, j) => { const yy = y(r.valor); g += `<line x1="${pl}" x2="${W - pr}" y1="${yy}" y2="${yy}" stroke="var(--ink-2)" stroke-width="1.5" stroke-dasharray="${j ? '2 3' : '5 4'}"/><text class="ref-t" x="${W - pr - 2}" y="${yy - 4 - j * 0}" text-anchor="end">${esc(r.rotulo)}</text>`; });
+  meses.forEach((k, i) => {
+    const x = pl + i * cw + cw / 2;
+    g += `<text x="${x}" y="${H - pb + 13}" text-anchor="middle">${rotMes(k)}</text>`;
+    if (i === 0 || k.slice(4) === '01') g += `<text x="${x}" y="${H - pb + 25}" text-anchor="middle">${k.slice(0, 4)}</text>`;
+    g += `<rect x="${pl + i * cw}" y="${pt}" width="${cw}" height="${ih}" fill="transparent" data-tip="${esc(tip(i))}"/>`;
+  });
+  return `<svg class="graf" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(alt)}">${g}</svg>`;
+}
+
+/* =====================================================================
+   RENDERIZAÇÃO
+   ===================================================================== */
+const ICONE = { ok: '✓', alerta: '!', critico: '✕', carregando: '…', nd: '–' };
+const ROT = { ok: 'OK', alerta: 'Alerta', critico: 'Crítico', carregando: 'Carregando', nd: 'Sem dados' };
+const badge = (n, txt) => `<span class="sinal s-${n}"><span class="ic" aria-hidden="true">${ICONE[n]}</span>${esc(txt ?? ROT[n])}</span>`;
+const flag = n => n === 'critico' ? 'f-critico' : n === 'alerta' ? 'f-alerta' : '';
+const nivelMaior = (v, a, c) => v == null ? '' : v > c ? 'critico' : v > a ? 'alerta' : '';
+const ROT_ACAO = { aprovar: 'Aprovada', reprovar: 'Reprovada', devolver: 'Devolvida para ajuste' };
+const ROT_FONTE = { exemplo: 'Exemplo', ponte: 'Ponte Chipa (endpoints a confirmar)', sece109: 'SECE109 importado', importada: 'JSON importado' };
+const erroHTML = m => `<p class="erro">${esc(m)}</p>`;
+const carregHTML = t => `<p class="carreg">Carregando ${esc(t)}…</p>`;
+
+let agendado = false;
+function agendar(){ if (agendado) return; agendado = true; requestAnimationFrame(() => { agendado = false; render(); }); }
+
+function render(){
+  renderBadges();
+  renderFila();
+  renderAnalise();
+}
+function renderBadges(){
+  const comEx = S.modo === 'exemplo', cpEx = Compras.fonte() === 'exemplo', ocEx = S.origemOC === 'exemplo';
+  $('#badges').innerHTML = [
+    `<span class="tag ${ocEx ? 'ex' : ''}">OC: ${esc(ROT_FONTE[S.origemOC] || S.origemOC)}</span>`,
+    `<span class="tag ${comEx ? 'ex' : ''}">Comercial: ${comEx ? 'Exemplo' : 'API Chipa'}</span>`,
+    `<span class="tag ${cpEx ? 'ex' : ''}">Compras: ${esc(ROT_FONTE[Compras.fonte()])}</span>`].join('');
+  const partes = [];
+  if (ocEx) partes.push('OC fictícia');
+  if (comEx) partes.push('vendas e devoluções fictícias');
+  if (cpEx) partes.push('estoque, custo e pendentes fictícios');
+  const fx = $('#faixaExemplo');
+  fx.hidden = !partes.length;
+  fx.textContent = partes.length ? `DADOS DE EXEMPLO — ${partes.join(', ')}. Gerados para demonstração; não use para decidir.` : '';
+}
+function renderFila(){
+  const el = $('#fila'), f = S.fila;
+  if (f.st === 'carregando') { el.innerHTML = carregHTML('OCs em aberto'); return; }
+  if (f.st === 'erro') { el.innerHTML = erroHTML('Fila de OCs indisponível: ' + f.err) + '<p class="small muted" style="margin-top:6px">Você ainda pode abrir uma OC pelo número (se a fonte de compras responder) ou importar a OC em JSON.</p>'; return; }
+  if (!f.v.length) { el.innerHTML = '<p class="vazio">Nenhuma OC em aberto.</p>'; return; }
+  el.innerHTML = `<div class="tabela-wrap"><table><thead><tr><th>OC nº</th><th>Fornecedor</th><th class="num">Valor</th><th>Data</th><th>Comprador</th><th class="num">Itens</th></tr></thead><tbody>${
+    f.v.map(o => `<tr class="clic ${S.oc && S.oc.numero === o.numero && S.origemOC !== 'importada' ? 'sel' : ''}" data-oc="${esc(o.numero)}" tabindex="0"><td><b>${esc(o.numero)}</b></td><td>${esc(o.fornecedor.codigo)} · ${esc(o.fornecedor.nome)}</td><td class="num">${gs(o.valor)}</td><td>${dataBR(o.data)}</td><td>${esc(o.comprador)}</td><td class="num">${o.nItens}</td></tr>`).join('')
+  }</tbody></table></div>`;
+}
+function renderAnalise(){
+  const ana = $('#analise');
+  if (!S.oc) {
+    $('#resumo').innerHTML = S.ocErro ? erroHTML(S.ocErro) : carregHTML(`a OC ${S.ocNum}`);
+    ['#cabecalho', '#kpis', '#itens', '#detalhe', '#pendentes', '#fornecedor', '#historico'].forEach(s => $(s).innerHTML = '');
+    $('#recorte').textContent = '';
+    ana.dataset.vazio = '1';
+    return;
+  }
+  delete ana.dataset.vazio;
+  const as = S.oc.itens.map((_, i) => calcItem(i));
+  const G = calcGeral(as), F = calcFornecedor();
+  S.ultimo = { as, G, F };
+  renderResumo(G);
+  renderCabecalho(as);
+  renderKpis(as, G, F);
+  renderRecorte();
+  renderItens(as);
+  renderDetalhe(as[S.sel] || as[0]);
+  renderPendentes(as);
+  renderFornecedor(F);
+  renderHistorico();
+}
+function renderResumo(G){
+  $('#resumo').innerHTML = `<div class="resumo">
+    <div class="rec rec-${G.rec.chave}"><div class="r">Recomendação automática</div><div class="v">${esc(G.rec.rot)}</div>
+      <div class="small" style="margin-top:4px">${esc(textoResumo(G.cont))}</div></div>
+    <div><h3>Principais motivos</h3>
+      ${G.motivos.length ? `<ul class="motivos-rec">${G.motivos.map(m => `<li>${badge(m.nivel)}<span>${esc(m.texto)}</span></li>`).join('')}</ul>` : '<p class="carreg">Aguardando os dados…</p>'}
+      ${G.incompleto ? '<p class="small" style="margin-top:8px;color:var(--alerta-ink)">Atenção: alguns blocos falharam; a recomendação considera só os dados disponíveis.</p>' : ''}
+    </div></div>`;
+}
+function statusOC(){
+  const h = LS.get(chaveHist(), []);
+  return h.length ? ROT_ACAO[h[h.length - 1].acao] : S.oc.status || 'Aguardando aprovação';
+}
+function renderCabecalho(as){
+  const oc = S.oc, total = soma(as.map(a => a.subtotal));
+  const campos = [
+    ['OC nº', oc.numero], ['Fornecedor', `${oc.fornecedor.codigo} · ${oc.fornecedor.nome}`], ['Comprador', oc.comprador || '—'],
+    ['Data', dataBR(oc.data)], ['Valor total', gs(total)], ['Nº de itens', String(oc.itens.length)], ['Status', statusOC()],
+    ['Modo de dados', `OC: ${ROT_FONTE[S.origemOC]} · Comercial: ${S.modo === 'chipa' ? 'API Chipa' : 'Exemplo'} · Compras: ${ROT_FONTE[Compras.fonte()]}`]];
+  $('#cabecalho').innerHTML = `<div class="cab">${campos.map(([r, v]) => `<div><div class="r">${esc(r)}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>`;
+}
+function renderKpis(as, G, F){
+  const total = soma(as.map(a => a.subtotal));
+  const pend = S.dados.pend, nMesmo = as.filter(a => a.pend && a.pend.length).length;
+  const k = (r, v, d = '', extra = '') => `<div class="kpi"><div class="r">${esc(r)}</div><div class="v">${v}</div><div class="d">${d}</div>${extra}</div>`;
+  const fv = S.dados.todo.st === 'ok' ? gs(F.tot.VENTA) : S.dados.todo.st === 'erro' ? 'erro' : '…';
+  $('#kpis').innerHTML = [
+    k('Valor total da OC', esc(gs(total)), `${S.oc.itens.length} itens`),
+    k('Semáforo geral', badge(G.geral), esc(textoResumo(G.cont))),
+    k('Venda do fornecedor (12 meses)', esc(fv), 'Chipa, proveedor ' + esc(S.oc.fornecedor.codigo)),
+    k('Devolução do fornecedor sobre venda', esc(F.devPct != null ? pct(F.devPct) : (S.dados.todo.st === 'carregando' ? '…' : '—')), '', ''),
+    k('Pendentes de recebimento', esc(pend.st === 'ok' ? String(new Set(pend.v.map(p => p.numero)).size) + ' OC' : pend.st === 'erro' ? 'erro' : '…'),
+      pend.st === 'ok' ? esc(`${nMesmo} ${nMesmo === 1 ? 'item desta OC' : 'itens desta OC'} com pedido pendente`) : ''),
+    k('Chegada prevista', esc(dataBR(somaDias(R.hoje, S.limites.prazoDias))), `prazo de ${S.limites.prazoDias} dias`),
+  ].join('');
+}
+function renderRecorte(){
+  $('#recorte').textContent = `Recorte: ${rotMesAno(R.meses[0])} a ${rotMesAno(R.meses[11])} — 12 meses fechados (${dataBR(R.ini)} a ${dataBR(R.fim)}; mês corrente excluído). ` +
+    `Filtros Chipa: codpro = cada item da OC; proveedor = ${S.oc.fornecedor.codigo || '—'}. Estoque desde ${dataBR(R.iniEstoque)} (mês anterior entra no estoque médio). Hoje: ${dataBR(R.hoje)}.`;
+  $('#chegadaTxt').textContent = `chegada em ${dataBR(somaDias(R.hoje, S.limites.prazoDias))}`;
+}
+function renderItens(as){
+  const L = S.limites;
+  const cel = (txt, cls = '') => `<td class="num ${cls}">${txt}</td>`;
+  const st = (a, chave) => S.dados.itens[a.i][chave].st;
+  const val = (a, chave, f) => st(a, chave) === 'carregando' ? '<span class="muted">…</span>' : st(a, chave) === 'erro' ? '<span class="muted" title="erro">erro</span>' : f();
+  $('#itens').innerHTML = `<table><thead><tr>
+    <th>Sinal</th><th>Código</th><th>Descrição</th><th class="num">Qtd</th><th class="num">Preço OC</th><th class="num">Subtotal</th>
+    <th class="num">Média mensal (un.)</th><th class="num">Cobertura (meses)</th><th class="num">Tendência 3m</th><th class="num">Devolução sobre venda</th>
+    <th class="num">OC sobre último custo</th><th class="num">Estoque na chegada sem OC</th><th class="num">Cobertura após chegada</th></tr></thead><tbody>${
+    as.map(a => `<tr class="clic ${a.i === S.sel ? 'sel' : ''}" data-i="${a.i}" tabindex="0" aria-selected="${a.i === S.sel}">
+      <td>${badge(a.nivel)}</td><td><b>${esc(a.it.codpro)}</b></td><td class="desc">${esc(a.it.descricao)}</td>
+      ${cel(un(a.it.quantidade))}${cel(gs(a.it.preco_unitario))}${cel(gs(a.subtotal))}
+      ${cel(val(a, 'serie', () => a.semVenda ? 'sem venda' : un(a.media)), a.semVenda ? 'f-critico' : '')}
+      ${cel(val(a, 'serie', () => a.cobertura != null ? dec(a.cobertura) : '—'), flag(nivelMaior(a.cobertura, L.cobAlerta, L.cobCritico)))}
+      ${cel(val(a, 'serie', () => pctS(a.tend)), a.tend != null && a.tend < L.tendAlerta ? 'f-alerta' : '')}
+      ${cel(val(a, 'serie', () => pct(a.devPct)), flag(nivelMaior(a.devPct, L.devAlerta, L.devCritico)))}
+      ${cel(val(a, 'custo', () => pctS(a.ocSobreUlt)), flag(nivelMaior(a.ocSobreUlt, L.custoAlerta, L.custoCritico)))}
+      ${cel(val(a, 'est', () => a.projSem != null ? un(a.projSem) : '—'), a.projSem < 0 && a.vmd > 0 ? 'f-critico' : '')}
+      ${cel(val(a, 'est', () => a.cobAposDias != null ? un(a.cobAposDias) + ' dias' : (a.projCom > 0 ? 'sem giro' : '—')), (a.cobAposDias > L.excessoDias || (a.projCom > 0 && !(a.vmd > 0) && a.serie)) ? 'f-alerta' : '')}
+    </tr>`).join('')}</tbody></table>`;
+}
+function renderDetalhe(a){
+  const el = $('#detalhe');
+  if (!a) { el.innerHTML = ''; return; }
+  const d = S.dados.itens[a.i], L = S.limites, it = a.it;
+  const estado = (b, nome) => b.st === 'carregando' ? carregHTML(nome) : b.st === 'erro' ? erroHTML(`Erro ao carregar ${nome}: ${b.err}`) : null;
+  const mm = arr => `<div class="mm">${arr.map(([r, v, c]) => `<div><span>${esc(r)}</span><b class="${c || ''}">${esc(v)}</b></div>`).join('')}</div>`;
+
+  // Vendas
+  let vendas = estado(d.serie, 'vendas do Chipa');
+  if (!vendas) {
+    vendas = mm([['Unidades 12 meses', un(a.tot.QTD_VEN)], ['Venda 12 meses', gs(a.tot.VENTA)], ['Média mensal', un(a.media) + ' un.'],
+      ['Cobertura do pedido', a.cobertura != null ? dec(a.cobertura) + ' meses' : '—', flag(nivelMaior(a.cobertura, L.cobAlerta, L.cobCritico))],
+      ['Tendência (3m sobre 3 anteriores)', pctS(a.tend), a.tend != null && a.tend < L.tendAlerta ? 'f-alerta' : ''],
+      ['Devolução sobre venda', pct(a.devPct), flag(nivelMaior(a.devPct, L.devAlerta, L.devCritico))],
+      ['Bonificação sobre venda', pct(a.bonPct)], ['Desconto sobre bruto', pct(a.descPct)]]);
+    if (a.semVenda) vendas += '<p class="vazio">Sem venda no período.</p>';
+    else {
+      vendas += `<p class="graf-titulo">Unidades vendidas por mês</p>` + grafico({ meses: R.meses, barras: a.serie.map(s => s.qtd), refs: [{ valor: a.media, rotulo: 'média ' + un(a.media) }],
+        tip: i => `${rotMesAno(R.meses[i])}\n${un(a.serie[i].qtd)} unidades`, alt: 'Unidades vendidas por mês, 12 meses' });
+      vendas += `<p class="graf-titulo">Venda por mês (G$)</p>` + grafico({ meses: R.meses, barras: a.serie.map(s => s.venda),
+        tip: i => `${rotMesAno(R.meses[i])}\n${gs(a.serie[i].venda)}`, alt: 'Venda em guaranis por mês, 12 meses' });
+    }
+  }
+  // Motivos
+  let mot = estado(d.mot, 'motivos de devolução');
+  if (!mot) {
+    mot = a.motivos && a.motivos.length ? `<ul class="mot">${a.motivos.map(m => `<li><div class="linha-m"><span>${esc(m.nome)}</span><b>${esc(gs(m.valor))}</b></div>
+      <div class="barra-mot" aria-hidden="true"><span style="width:${Math.max(2, m.pct || 0).toFixed(1)}%"></span></div>
+      <div class="small muted">${pct(m.pct)} sobre o total devolvido · ${un(m.ctd)} un.</div></li>`).join('')}</ul>` : '<p class="vazio">Sem devoluções no período.</p>';
+    if (S.motivosTab && S.motivosTab.st === 'erro') mot += '<p class="small muted" style="margin-top:6px">Tabela de motivos indisponível; exibindo o código.</p>';
+  }
+  // Estoque e giro
+  let est = estado(d.est, 'estoque');
+  if (!est) {
+    const g = a.giro;
+    est = mm([['Estoque atual', un(a.estAtual) + ' un.'], ['Estoque médio 12m', un(a.estMedio) + ' un.'], ['Giro 12 meses', a.giroAnual != null ? dec(a.giroAnual, 1) + ' vezes' : '—'],
+      ['Cobertura atual', a.vmd > 0 && a.estAtual != null ? un(a.estAtual / a.vmd) + ' dias' : '—']]);
+    est += `<p class="graf-titulo">Estoque final e unidades vendidas por mês</p>` + grafico({ meses: R.meses, barras: g.map(x => x.ef), linha: a.serie ? g.map(x => x.vend) : null,
+      tip: i => `${rotMesAno(R.meses[i])}\nEstoque final: ${un(g[i].ef)} un.\nVendidas: ${un(g[i].vend)} un.\nGiro: ${g[i].giro != null ? dec(g[i].giro, 2) : '—'}`, alt: 'Estoque final e vendas por mês' });
+    est += `<div class="legenda"><span><i style="background:var(--accent)"></i>Estoque final</span>${a.serie ? '<span><i class="linha" style="background:var(--serie-2)"></i>Unidades vendidas (Chipa)</span>' : ''}</div>`;
+    est += `<div class="tabela-wrap" style="margin-top:8px"><table><thead><tr><th>Mês</th><th class="num">Estoque final</th><th class="num">Vendidas</th><th class="num">Estoque médio</th><th class="num">Giro</th><th class="num">Cobertura (dias)</th></tr></thead><tbody>${
+      g.map(x => `<tr><td>${rotMesAno(x.k)}</td><td class="num">${un(x.ef)}</td><td class="num">${un(x.vend)}</td><td class="num">${un(x.med)}</td><td class="num">${x.giro != null ? dec(x.giro, 2) : '—'}</td><td class="num">${x.cobDias != null ? un(x.cobDias) : '—'}</td></tr>`).join('')
+    }</tbody></table></div><p class="small muted" style="margin-top:4px">Giro = vendidas no mês ÷ estoque médio do mês. Cobertura = estoque final ÷ venda média diária do mês.</p>`;
+  }
+  // Custo de compra
+  let cus = estado(d.custo, 'custo de compra');
+  if (!cus) {
+    const c = a.custos, temCusto = c.some(x => x.custo != null);
+    cus = mm([['Preço desta OC', gs(it.preco_unitario)], ['Último custo', gs(a.ultCusto)], ['Média 12 meses', gs(a.medCusto)],
+      ['OC sobre último custo', pctS(a.ocSobreUlt), flag(nivelMaior(a.ocSobreUlt, L.custoAlerta, L.custoCritico))],
+      ['OC sobre média 12m', pctS(a.ocSobreMed)], ['Variação acumulada', pctS(a.varAcum)]]);
+    if (!temCusto) cus += '<p class="vazio">Sem entrada de compra nos 12 meses do recorte.</p>';
+    else {
+      cus += `<p class="graf-titulo">Custo unitário de compra por mês (última entrada do mês)</p>` + grafico({ meses: R.meses, barras: c.map(x => x.custo),
+        refs: [{ valor: it.preco_unitario, rotulo: 'OC ' + abrev(it.preco_unitario) }],
+        tip: i => c[i].custo != null ? `${rotMesAno(R.meses[i])}\nCusto: ${gs(c[i].custo)}\nEntrada: ${dataBR(c[i].data)}\nSobre entrada anterior: ${pctS(c[i].varMes)}` : `${rotMesAno(R.meses[i])}\nSem entrada no mês`,
+        alt: 'Custo unitário de compra por mês comparado ao preço da OC' });
+      cus += `<div class="legenda"><span><i style="background:var(--accent)"></i>Custo de compra</span><span><i class="trac"></i>Preço desta OC</span></div>`;
+      cus += `<div class="tabela-wrap" style="margin-top:8px"><table><thead><tr><th>Mês</th><th>Entrada</th><th class="num">Custo unitário</th><th class="num">Variação sobre entrada anterior</th><th class="num">Variação acumulada</th></tr></thead><tbody>${
+        c.map(x => `<tr><td>${rotMesAno(x.k)}</td><td>${x.custo != null ? dataBR(x.data) : '<span class="muted">sem entrada</span>'}</td><td class="num">${gs(x.custo)}</td><td class="num">${pctS(x.varMes)}</td><td class="num">${pctS(x.varAcum)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    }
+  }
+  // Estoque futuro
+  let fut;
+  if (d.est.st !== 'ok' || d.serie.st !== 'ok') fut = estado(d.est, 'estoque') || estado(d.serie, 'vendas do Chipa') || '';
+  else {
+    const pendTxt = S.dados.pend.st === 'ok' ? '' : '<p class="small" style="color:var(--alerta-ink)">Pendentes indisponíveis: projeção feita sem eles.</p>';
+    fut = `${pendTxt}<div class="eq">
+      <span>Estoque atual</span><span class="num">${un(a.estAtual)}</span>
+      <span>+ Pendentes que chegam até ${dataBR(a.chegada)}</span><span class="num">${un(a.pendAntes || 0)}</span>
+      <span>− Venda média diária (${dec(a.vmd, 1)} un.) × ${L.prazoDias} dias</span><span class="num">${un(a.consumo)}</span>
+      <span class="tot">= Estoque na chegada SEM esta OC</span><span class="num tot ${a.projSem < 0 && a.vmd > 0 ? 'f-critico' : ''}">${un(a.projSem)}</span>
+      <span>+ Esta OC</span><span class="num">${un(it.quantidade)}</span>
+      <span class="tot">= Estoque na chegada COM esta OC</span><span class="num tot">${un(a.projCom)}</span>
+      <span>Cobertura após a chegada</span><span class="num ${a.cobAposDias > L.excessoDias || !(a.vmd > 0) ? 'f-alerta' : ''}">${a.cobAposDias != null ? un(a.cobAposDias) + ' dias' : 'sem giro'}</span>
+    </div>`;
+    if (a.projSem < 0 && a.vmd > 0) fut += `<p class="erro">Vai faltar antes de chegar: o estoque acaba em cerca de ${un(a.diasAteRuptura)} dias (chegada em ${L.prazoDias}).</p>`;
+    if (a.pendDepois > 0) fut += `<p class="small muted">${un(a.pendDepois)} un. pendentes chegam depois de ${dataBR(a.chegada)} e não entram na projeção.</p>`;
+    fut += `<p class="small muted" style="margin-top:6px">Venda média diária = unidades vendidas em 12 meses ÷ ${R.diasRecorte} dias. Se faltar antes da chegada, a venda perdida não é recuperada (o estoque com a OC parte de zero).</p>`;
+  }
+  const sinaisHTML = a.sinais.length ? `<ul class="lista-sinais">${a.sinais.map(s => `<li>${badge(s.nivel)}<span>${esc(s.texto)}</span></li>`).join('')}</ul>`
+    : (a.nivel === 'ok' ? `<ul class="lista-sinais"><li>${badge('ok')}<span>Nenhum sinal de alerta para este item.</span></li></ul>` : '');
+  el.innerHTML = `<div class="det-topo"><h2>Detalhe · ${esc(it.codpro)}</h2><span>${esc(it.descricao)}</span>${badge(a.nivel)}
+      <span class="small muted">${un(it.quantidade)} un. × ${gs(it.preco_unitario)} = ${gs(a.subtotal)}</span></div>
+    ${sinaisHTML}
+    ${a.erros.length ? `<p class="small" style="color:var(--alerta-ink);margin-bottom:8px">Dados incompletos: ${esc(a.erros.join(', '))}.</p>` : ''}
+    <div class="det-grid">
+      <div class="bloco"><h3>Vendas 12 meses <span class="muted">Chipa</span></h3>${vendas}</div>
+      <div class="bloco"><h3>Estoque futuro na chegada <span class="muted">${dataBR(a.chegada)}</span></h3>${fut}</div>
+      <div class="bloco"><h3>Estoque e giro mês a mês <span class="muted">Compras</span></h3>${est}</div>
+      <div class="bloco"><h3>Custo de compra mês a mês <span class="muted">Compras</span></h3>${cus}</div>
+      <div class="bloco"><h3>Top 3 motivos de devolução <span class="muted">Chipa</span></h3>${mot}</div>
+    </div>`;
+}
+function renderPendentes(as){
+  const el = $('#pendentes'), p = S.dados.pend;
+  const h = `<div class="card-h"><h2>OCs aprovadas pendentes de recebimento</h2><span class="small muted">mesmos itens ou mesmo fornecedor (${esc(S.oc.fornecedor.codigo)})</span></div>`;
+  if (p.st === 'carregando') { el.innerHTML = h + carregHTML('pendentes'); return; }
+  if (p.st === 'erro') { el.innerHTML = h + erroHTML('Pendentes indisponíveis: ' + p.err); return; }
+  if (!p.v.length) { el.innerHTML = h + '<p class="vazio">Nenhuma OC pendente de recebimento para estes itens ou este fornecedor.</p>'; return; }
+  const cods = new Set(S.oc.itens.map(i => i.codpro));
+  const dup = as.filter(a => a.pend && a.pend.length);
+  const rows = [...p.v].sort((x, y) => (cods.has(y.codpro) - cods.has(x.codpro)) || String(x.data_prevista).localeCompare(String(y.data_prevista)));
+  el.innerHTML = h + (dup.length ? `<p class="alerta-box">Risco de compra duplicada: ${dup.length} ${dup.length === 1 ? 'item desta OC já tem' : 'itens desta OC já têm'} pedido pendente (${esc(dup.map(a => a.it.codpro).join(', '))}).</p>` : '') +
+    `<div class="tabela-wrap"><table><thead><tr><th>OC nº</th><th>Fornecedor</th><th>Item</th><th class="num">Qtd pendente</th><th>Entrega prevista</th><th class="num">Atraso</th><th>Relação</th></tr></thead><tbody>${
+      rows.map(r => { const atraso = r.data_prevista ? diasEntre(r.data_prevista, R.hoje) : null; const mesmo = cods.has(r.codpro);
+        return `<tr><td><b>${esc(r.numero)}</b></td><td>${esc(r.fornecedor.codigo)} · ${esc(r.fornecedor.nome)}</td><td class="desc"><b>${esc(r.codpro)}</b> ${esc(r.descricao)}</td>
+          <td class="num">${un(r.qtd_pendente)}</td><td>${dataBR(r.data_prevista)}</td><td class="num ${atraso > 0 ? 'f-critico' : ''}">${atraso > 0 ? atraso + ' dias' : '—'}</td>
+          <td>${mesmo ? badge('alerta', 'Mesmo item') : '<span class="muted">Mesmo fornecedor</span>'}</td></tr>`; }).join('')
+    }</tbody></table></div>`;
+}
+function renderFornecedor(F){
+  const el = $('#fornecedor'), t = S.dados.todo, ac = S.dados.acordos, L = S.limites;
+  let h = `<div class="card-h"><h2>Fornecedor · ${esc(S.oc.fornecedor.codigo)} ${esc(S.oc.fornecedor.nome)}</h2><span class="small muted">Chipa · 12 meses fechados</span></div>`;
+  if (t.st === 'carregando') h += carregHTML('totais do fornecedor');
+  else if (t.st === 'erro') h += erroHTML('Totais do fornecedor indisponíveis: ' + t.err);
+  else if (!t.v.length) h += '<p class="vazio">Sem venda do fornecedor no período.</p>';
+  else h += `<div class="mm">${[
+      ['Venda 12 meses', gs(F.tot.VENTA), ''], ['Devolução', gs(F.tot.DEVOLUCION), ''],
+      ['Devolução sobre venda', pct(F.devPct), flag(nivelMaior(F.devPct, L.devAlerta, L.devCritico))],
+      ['Bonificação', gs(F.tot.BONIFICACION), ''], ['Bonificação sobre venda', pct(F.bonPct), ''],
+      ['Crédito por acordo comercial', gs(F.tot.CREDITO_ACU), ''], ['Acordo comercial sobre venda', pct(F.acuPct), '']
+    ].map(([r, v, c]) => `<div><span>${esc(r)}</span><b class="${c}">${esc(v)}</b></div>`).join('')}</div>`;
+  h += '<h3 style="margin-top:12px">Acordos comerciais com valor (USU_NUMCLA)</h3>';
+  if (ac.st === 'carregando') h += carregHTML('acordos');
+  else if (ac.st === 'erro') h += erroHTML('Acordos indisponíveis: ' + ac.err);
+  else if (!F.acordos.length) h += '<p class="vazio">Nenhum acordo comercial com valor no período.</p>';
+  else h += `<div class="tabela-wrap"><table><thead><tr><th>Acordo</th><th class="num">Crédito por acordo</th><th class="num">Venda vinculada</th><th class="num">Crédito sobre venda</th></tr></thead><tbody>${
+    F.acordos.map(r => `<tr><td>${esc(r.USU_NUMCLA)}</td><td class="num">${gs(r.CREDITO_ACU)}</td><td class="num">${gs(r.VENTA)}</td><td class="num">${r.VENTA > 0 ? pct(r.CREDITO_ACU / r.VENTA * 100) : '—'}</td></tr>`).join('')
+  }</tbody></table></div>`;
+  el.innerHTML = h;
+}
+
+/* =====================================================================
+   DECISÃO
+   ===================================================================== */
+const chaveHist = () => 'aprovacao-oc:decisoes:' + (S.oc ? S.oc.numero : '');
+function renderHistorico(){
+  const h = LS.get(chaveHist(), []);
+  $('#decStatus').textContent = 'Status: ' + statusOC();
+  $('#historico').innerHTML = h.length ? `<ul class="hist">${[...h].reverse().map(x => `<li>${badge(x.acao === 'aprovar' ? 'ok' : x.acao === 'reprovar' ? 'critico' : 'alerta', ROT_ACAO[x.acao])}
+    <span class="q"> ${esc(new Date(x.quando).toLocaleString('pt-BR'))} · recomendação na hora: ${esc(x.recomendacao || '—')}</span>
+    ${x.comentario ? `<div style="margin-top:4px">${esc(x.comentario)}</div>` : ''}</li>`).join('')}</ul>` : '<p class="small muted">Nenhuma decisão registrada.</p>';
+}
+function decidir(acao){
+  if (!S.oc) return;
+  const ta = $('#comentario'), err = $('#erroDecisao'), c = ta.value.trim();
+  if ((acao === 'reprovar' || acao === 'devolver') && !c) {
+    err.textContent = `Comentário obrigatório para ${acao === 'reprovar' ? 'Reprovar' : 'Devolver para ajuste'}. Explique o motivo antes de registrar.`;
+    err.hidden = false; ta.setAttribute('aria-invalid', 'true'); ta.focus();
+    return;
+  }
+  err.hidden = true; ta.removeAttribute('aria-invalid');
+  const h = LS.get(chaveHist(), []);
+  h.push({ quando: new Date().toISOString(), acao, comentario: c, recomendacao: S.ultimo ? S.ultimo.G.rec.rot : '' });
+  LS.set(chaveHist(), h);
+  ta.value = '';
+  avisar(`OC ${S.oc.numero}: ${ROT_ACAO[acao]}.`);
+  render();
+}
+function exportar(){
+  if (!S.oc || !S.ultimo) return;
+  const { as, G, F } = S.ultimo, r2 = v => ok(v) ? Math.round(v * 100) / 100 : null;
+  const parecer = {
+    tipo: 'parecer-pre-aprovacao-oc', gerado_em: new Date().toISOString(), empresa: 'San Jose (Paraguai)', moeda: 'PYG (G$)',
+    oc: { numero: S.oc.numero, data: S.oc.data, comprador: S.oc.comprador, fornecedor: S.oc.fornecedor, status: statusOC(),
+      valor_total: soma(as.map(a => a.subtotal)), origem: ROT_FONTE[S.origemOC] },
+    fontes: { comercial: S.modo === 'chipa' ? 'API Chipa' : 'Exemplo (fictício)', compras: ROT_FONTE[Compras.fonte()] },
+    recorte: { data_ini: R.ini, data_fim: R.fim, meses: R.meses, filtros: { codpro: S.oc.itens.map(i => i.codpro), proveedor: S.oc.fornecedor.codigo } },
+    limites: S.limites,
+    recomendacao: { resultado: G.rec.rot, motivos: G.motivos.map(m => m.texto), resumo: textoResumo(G.cont), semaforo_geral: ROT[G.geral], dados_incompletos: G.incompleto },
+    itens: as.map(a => ({
+      codpro: a.it.codpro, descricao: a.it.descricao, quantidade: a.it.quantidade, preco_unitario: a.it.preco_unitario, subtotal: a.subtotal,
+      sinal: ROT[a.nivel], sinais: a.sinais.map(s => `${ROT[s.nivel]}: ${s.texto}`),
+      unidades_12m: a.tot ? a.tot.QTD_VEN : null, venda_12m: a.tot ? r2(a.tot.VENTA) : null, media_mensal_unidades: r2(a.media),
+      cobertura_pedido_meses: r2(a.cobertura), tendencia_3m_sobre_3_anteriores_pct: r2(a.tend),
+      devolucao_sobre_venda_pct: r2(a.devPct), bonificacao_sobre_venda_pct: r2(a.bonPct), desconto_sobre_bruto_pct: r2(a.descPct),
+      top_motivos_devolucao: (a.motivos || []).map(m => ({ motivo: m.nome, valor: r2(m.valor), pct_sobre_total_devolvido: r2(m.pct) })),
+      estoque_atual: a.estAtual ?? null, giro_12m: r2(a.giroAnual),
+      estoque_giro_mensal: (a.giro || []).map(g => ({ mes: g.k, estoque_final: g.ef, vendidas: g.vend, giro: r2(g.giro), cobertura_dias: r2(g.cobDias) })),
+      custo_compra_mensal: (a.custos || []).filter(c => c.custo != null).map(c => ({ mes: c.k, entrada: c.data, custo_unitario: c.custo, variacao_sobre_entrada_anterior_pct: r2(c.varMes), variacao_acumulada_pct: r2(c.varAcum) })),
+      ultimo_custo_compra: a.ultCusto ?? null, media_custo_compra_12m: r2(a.medCusto), oc_sobre_ultimo_custo_pct: r2(a.ocSobreUlt), oc_sobre_media_custo_pct: r2(a.ocSobreMed),
+      pendentes: (a.pend || []).map(p => ({ oc: p.numero, qtd_pendente: p.qtd_pendente, data_prevista: p.data_prevista })),
+      estoque_futuro: { chegada: a.chegada, prazo_dias: S.limites.prazoDias, venda_media_diaria: r2(a.vmd), pendentes_ate_chegada: a.pendAntes ?? null,
+        projetado_sem_oc: r2(a.projSem), projetado_com_oc: r2(a.projCom), cobertura_apos_chegada_dias: r2(a.cobAposDias) },
+    })),
+    fornecedor: F.tot ? { venda_12m: r2(F.tot.VENTA), devolucao: r2(F.tot.DEVOLUCION), devolucao_sobre_venda_pct: r2(F.devPct), bonificacao: r2(F.tot.BONIFICACION),
+      bonificacao_sobre_venda_pct: r2(F.bonPct), credito_acordo_comercial: r2(F.tot.CREDITO_ACU), acordo_sobre_venda_pct: r2(F.acuPct),
+      acordos: (F.acordos || []).map(a => ({ acordo: a.USU_NUMCLA, credito: r2(a.CREDITO_ACU), venda: r2(a.VENTA) })) } : null,
+    pendentes_recebimento: S.dados.pend.st === 'ok' ? S.dados.pend.v : null,
+    decisoes: LS.get(chaveHist(), []),
+    aviso: 'Contém custo de compra (área de Compras). Acesso restrito a Compras e Diretoria. Não contém custo de venda nem margem do Chipa.',
+  };
+  const blob = new Blob([JSON.stringify(parecer, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `parecer-OC-${S.oc.numero}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* =====================================================================
+   IMPORTAÇÕES
+   ===================================================================== */
+function lerOCJson(txt){
+  let j = JSON.parse(txt);
+  if (Array.isArray(j)) j = j[0];
+  if (!j || typeof j !== 'object') throw new Error('JSON precisa ser um objeto com a OC.');
+  const g = (o, ...ks) => { for (const k of ks) if (o && o[k] != null && o[k] !== '') return o[k]; };
+  const fr = g(j, 'fornecedor', 'proveedor');
+  const fornecedor = fr && typeof fr === 'object'
+    ? { codigo: String(g(fr, 'codigo', 'cod', 'CODFOR') ?? ''), nome: String(g(fr, 'nome', 'nombre', 'NOMFOR') ?? '') }
+    : { codigo: String(g(j, 'fornecedor_codigo', 'codfor') ?? fr ?? ''), nome: String(g(j, 'fornecedor_nome', 'nomfor') ?? '') };
+  const itensBr = g(j, 'itens', 'items');
+  if (!Array.isArray(itensBr) || !itensBr.length) throw new Error('A OC precisa de "itens" (lista não vazia).');
+  const itens = itensBr.map((x, n) => {
+    const codpro = String(g(x, 'codpro', 'CODPRO', 'codigo') ?? '').trim();
+    const q = parseNum(g(x, 'quantidade', 'qtd', 'cantidad', 'qtd_pedida')), p = parseNum(g(x, 'preco_unitario', 'preco', 'precio_unitario', 'precio'));
+    if (!codpro) throw new Error(`Item ${n + 1}: falta "codpro".`);
+    if (!(q > 0)) throw new Error(`Item ${n + 1} (${codpro}): "quantidade" inválida.`);
+    if (!(p >= 0)) throw new Error(`Item ${n + 1} (${codpro}): "preco_unitario" inválido.`);
+    return { codpro, descricao: String(g(x, 'descricao', 'descripcion') ?? ''), quantidade: q, preco_unitario: p };
+  });
+  return { numero: String(g(j, 'numero', 'numero_oc') ?? 'sem número'), data: parseData(g(j, 'data', 'fecha', 'data_emissao')) || '',
+    comprador: String(g(j, 'comprador') ?? ''), status: String(g(j, 'status', 'situacao') ?? 'Aguardando aprovação'), fornecedor, itens };
+}
+function usarOC(oc){
+  S.abertura++; S.oc = oc; S.ocNum = oc.numero; S.ocErro = null; S.origemOC = 'importada';
+  $('#statusJson').textContent = `OC ${oc.numero} importada (${oc.itens.length} itens).`;
+  carregarAnalise(); renderFila();
+}
+function lerCSV(txt){
+  txt = txt.replace(/^﻿/, '');
+  const prim = txt.split(/\r?\n/)[0];
+  const sepr = [';', '\t', ','].map(c => [c, prim.split(c).length]).sort((a, b) => b[1] - a[1])[0][0];
+  const linhas = []; let campo = '', linha = [], aspas = false;
+  for (let i = 0; i < txt.length; i++) {
+    const c = txt[i];
+    if (aspas) { if (c === '"') { if (txt[i + 1] === '"') { campo += '"'; i++; } else aspas = false; } else campo += c; }
+    else if (c === '"') aspas = true;
+    else if (c === sepr) { linha.push(campo); campo = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && txt[i + 1] === '\n') i++; linha.push(campo); linhas.push(linha); linha = []; campo = ''; }
+    else campo += c;
+  }
+  if (campo || linha.length) { linha.push(campo); linhas.push(linha); }
+  const cab = (linhas.shift() || []).map(s => s.trim());
+  return linhas.filter(l => l.some(v => v.trim() !== '')).map(l => Object.fromEntries(cab.map((h, i) => [h, (l[i] ?? '').trim()])));
+}
+async function importarSece(files){
+  const dados = { linhasOC: [], estoque: [], custos: [], arquivos: [], ignoradas: 0 };
+  for (const f of files) {
+    const txt = await f.text();
+    let rows;
+    if (/\.json$/i.test(f.name) || /^\s*[\[{]/.test(txt)) {
+      const j = JSON.parse(txt);
+      rows = Array.isArray(j) ? j : Object.values(j).filter(Array.isArray).flat();
+      if (!Array.isArray(j) && j.dados && Array.isArray(j.dados)) rows = j.dados;
+    } else rows = lerCSV(txt);
+    for (const bruto of rows) {
+      const l = mapearCompras(bruto);
+      if (('estoque_final' in l || 'estoque_atual' in l) && !l.numero_oc) dados.estoque.push(l);
+      else if ('custo_unitario' in l && !l.numero_oc) dados.custos.push(l);
+      else if (l.numero_oc && l.codpro) dados.linhasOC.push(l);
+      else dados.ignoradas++;
+    }
+    dados.arquivos.push(f.name);
+  }
+  if (!dados.linhasOC.length && !dados.estoque.length && !dados.custos.length) throw new Error('Nenhuma linha reconhecida. Confira os nomes das colunas (README).');
+  return dados;
+}
+
+/* =====================================================================
+   CONFIGURAÇÃO NA TELA, AVISOS E EVENTOS
+   ===================================================================== */
+function renderLimites(){
+  $('#limites').innerHTML = DEF_LIMITES.map(([k, r, u]) => `<label class="lim"><span>${esc(r)}</span><input type="number" step="any" data-lim="${k}" value="${S.limites[k]}"><span class="muted">${esc(u)}</span></label>`).join('');
+  $('#prazoTopo').value = S.limites.prazoDias;
+}
+function mudarLimite(k, v){
+  const n = Number(v);
+  if (!isFinite(n) || (k === 'prazoDias' && n < 1)) return;
+  S.limites[k] = n;
+  LS.set('aprovacao-oc:limites', S.limites);
+  if (k === 'prazoDias') { $('#prazoTopo').value = n; const i = $('[data-lim="prazoDias"]'); if (i && i !== document.activeElement) i.value = n; }
+  agendar();
+}
+let toastT;
+function avisar(m){ const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 4500); }
+function selecionar(i, rolar){
+  S.sel = i; render();
+  if (rolar && window.innerWidth < 1100) $('#detalhe').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function recarregarTudo(){
+  S.motivosTab = null;
+  carregarFila();
+  if (S.origemOC === 'importada' && S.oc) carregarAnalise();
+  else abrirOC(S.ocNum || '31716');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderLimites();
+  $('#limites').addEventListener('input', e => { const k = e.target.dataset.lim; if (k) mudarLimite(k, e.target.value); });
+  $('#prazoTopo').addEventListener('input', e => mudarLimite('prazoDias', e.target.value));
+  $('#limPadrao').addEventListener('click', () => { S.limites = { ...LIMITES_PADRAO }; LS.set('aprovacao-oc:limites', S.limites); renderLimites(); agendar(); });
+
+  $('#aplicarFonte').addEventListener('click', () => {
+    S.modo = document.querySelector('input[name=modo]:checked').value;
+    S.base = $('#baseUrl').value.trim() || '/api/v1';
+    S.token = $('#token').value.trim();                    // só em memória
+    if (S.modo === 'chipa' && !S.token) { avisar('Informe o token para usar a API Chipa.'); return; }
+    recarregarTudo();
+  });
+  $('#arqSece').addEventListener('change', async e => {
+    const files = [...e.target.files]; if (!files.length) return;
+    try {
+      S.sece109 = await importarSece(files);
+      const d = S.sece109;
+      $('#statusSece').textContent = `SECE109 importado (${d.arquivos.join(', ')}): ${d.linhasOC.length} linhas de OC, ${d.estoque.length} de estoque, ${d.custos.length} de custo${d.ignoradas ? `, ${d.ignoradas} ignoradas` : ''}.`;
+      carregarFila();
+      const abertas = await ComprasImportado.listarAbertas();
+      const alvo = abertas.find(o => o.numero === S.ocNum) ? S.ocNum : (abertas[0] ? abertas[0].numero : S.ocNum);
+      if (S.origemOC === 'importada' && S.oc) carregarAnalise(); else abrirOC(alvo);
+    } catch (err) { $('#statusSece').textContent = 'Falha ao importar: ' + err.message; }
+    e.target.value = '';
+  });
+  $('#descartarSece').addEventListener('click', () => { S.sece109 = null; $('#statusSece').textContent = 'Nenhum SECE109 importado. Compras segue o modo selecionado.'; recarregarTudo(); });
+  $('#usarJson').addEventListener('click', () => { try { usarOC(lerOCJson($('#ocJson').value)); } catch (e) { $('#statusJson').textContent = 'JSON inválido: ' + e.message; } });
+  $('#arqOc').addEventListener('change', async e => { const f = e.target.files[0]; if (!f) return; const t = await f.text(); $('#ocJson').value = t; try { usarOC(lerOCJson(t)); } catch (er) { $('#statusJson').textContent = 'JSON inválido: ' + er.message; } e.target.value = ''; });
+  $('#voltarExemplo').addEventListener('click', () => {
+    if (S.modo !== 'exemplo' || S.sece109) { S.modo = 'exemplo'; S.sece109 = null; document.querySelector('input[name=modo][value=exemplo]').checked = true; S.motivosTab = null; carregarFila(); }
+    $('#statusJson').textContent = ''; abrirOC('31716');
+  });
+  $('#formAbrir').addEventListener('submit', e => { e.preventDefault(); abrirOC($('#abrirNum').value); });
+  $('#fila').addEventListener('click', e => { const tr = e.target.closest('tr[data-oc]'); if (tr) abrirOC(tr.dataset.oc); });
+  $('#fila').addEventListener('keydown', e => { const tr = e.target.closest('tr[data-oc]'); if (tr && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); abrirOC(tr.dataset.oc); } });
+  $('#itens').addEventListener('click', e => { const tr = e.target.closest('tr[data-i]'); if (tr) selecionar(+tr.dataset.i, true); });
+  $('#itens').addEventListener('keydown', e => { const tr = e.target.closest('tr[data-i]'); if (tr && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); selecionar(+tr.dataset.i, true); } });
+  document.querySelectorAll('[data-acao]').forEach(b => b.addEventListener('click', () => decidir(b.dataset.acao)));
+  $('#comentario').addEventListener('input', () => { if ($('#comentario').value.trim()) { $('#erroDecisao').hidden = true; $('#comentario').removeAttribute('aria-invalid'); } });
+  $('#exportar').addEventListener('click', exportar);
+
+  // Dica flutuante dos gráficos
+  const tip = $('#tip');
+  const mostrar = (alvo, x, y) => { tip.textContent = alvo.getAttribute('data-tip'); tip.hidden = false;
+    const r = tip.getBoundingClientRect(); tip.style.left = Math.max(8, Math.min(window.innerWidth - r.width - 8, x + 12)) + 'px'; tip.style.top = Math.max(8, y - r.height - 10) + 'px'; };
+  document.addEventListener('pointermove', e => { const t = e.target.closest && e.target.closest('[data-tip]'); if (t) mostrar(t, e.clientX, e.clientY); else tip.hidden = true; });
+  document.addEventListener('scroll', () => tip.hidden = true, { passive: true });
+
+  carregarFila();
+  abrirOC('31716');
+});
+</script>
+</body>
+</html>
